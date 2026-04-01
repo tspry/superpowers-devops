@@ -1,0 +1,9 @@
+{
+  "name": "superpowers-devops",
+  "version": "1.0.0",
+  "description": "Unified DevOps intelligence layer for Gemini CLI",
+  "contextFileName": "GEMINI.md",
+  "skills": {
+    "directory": "skills"
+  }
+}

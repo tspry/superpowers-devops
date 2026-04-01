@@ -1,0 +1,19 @@
+{
+  "name": "superpowers-devops",
+  "version": "1.0.0",
+  "description": "Unified DevOps intelligence layer for AI coding agents",
+  "keywords": [
+    "devops",
+    "skills",
+    "debugging",
+    "infrastructure",
+    "kubernetes",
+    "terraform",
+    "ci-cd",
+    "claude-code",
+    "cursor"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/tspry/superpowers-devops",
+  "repository": "https://github.com/tspry/superpowers-devops"
+}
