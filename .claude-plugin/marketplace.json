@@ -1,6 +1,10 @@
 {
   "name": "superpowers-devops-marketplace",
   "description": "Marketplace for superpowers-devops plugin",
+  "owner": {
+      "name": "tspry",
+      "url": "https://github.com/tspry"
+  },
   "plugins": [
     {
       "name": "superpowers-devops",
