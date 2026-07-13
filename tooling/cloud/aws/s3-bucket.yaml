@@ -1,0 +1,66 @@
+---
+# S3 bucket with versioning and default encryption (SSE-S3)
+# Substitute your bucket name and region.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "S3 bucket for my-app data storage"
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: my-app-data-20260714
+    Description: Globally unique S3 bucket name
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production, staging, development]
+
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Ref BucketName
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldVersions
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 90
+          - Id: AbortIncompleteUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      Tags:
+        - Key: Name
+          Value: !Ref BucketName
+        - Key: Environment
+          Value: !Ref Environment
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EnforceTlsOnly
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "${DataBucket.Arn}"
+              - !Sub "${DataBucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": "false"

@@ -95,5 +95,5 @@ git worktree prune  # clean up stale registrations
 - Never run destructive infra commands (terraform destroy, kubectl delete) without confirming the target environment
 - Always confirm which branch/worktree you're in before applying changes
 - Do NOT run `git worktree remove` from inside the worktree being removed
-- Only clean up worktrees under `.worktrees/`, `worktrees/`, or `~/.config/superpowers/worktrees/`
+- Only clean up worktrees under `.worktrees/` or `worktrees/`
 - Run `git worktree prune` after removal as self-healing

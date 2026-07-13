@@ -54,6 +54,42 @@ Only after you have confirmed the root cause:
 - Explain what caused it and why the fix resolves it
 - Check if the same issue exists elsewhere
 
+## Red Flags — STOP and Follow Process
+
+If you catch yourself thinking:
+- "Quick fix for now, investigate later"
+- "Just try changing X and see if it works"
+- "Add multiple changes, run tests"
+- "Skip the test, I'll manually verify"
+- "It's probably X, let me fix that"
+- "I don't fully understand but this might work"
+- Proposing solutions before tracing data flow
+- **"One more fix attempt" (when already tried 2+)**
+- **Each fix reveals new problem in different place**
+
+**ALL of these mean: STOP. Return to Phase 1.**
+
+**If 3+ fixes failed:** Question the architecture — is this pattern fundamentally sound? Discuss with your human partner before attempting more fixes.
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs. |
+| "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing. |
+| "Just try this first, then investigate" | First fix sets the pattern. Do it right from the start. |
+| "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
+| "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |
+
+## Quick Reference
+
+| Phase | Key Activities | Success Criteria |
+|-------|---------------|------------------|
+| **1. Gather Evidence** | Read errors, reproduce, check changes, collect context | Understand WHAT and WHERE |
+| **2. Form Hypotheses** | List falsifiable hypotheses, one at a time | Specific, testable theories |
+| **3. Test Hypotheses** | Smallest possible test per hypothesis | Confirmed or ruled out |
+| **4. Fix** | Fix root cause, verify, check for spread | Bug resolved, no regressions |
+
 ## Common DevOps Error Patterns
 
 | Error | First thing to check |

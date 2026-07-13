@@ -2,6 +2,7 @@
   "name": "superpowers-devops",
   "version": "1.0.0",
   "description": "Unified DevOps intelligence layer for AI coding agents",
+  "main": ".opencode/plugins/superpowers-devops.js",
   "keywords": [
     "devops",
     "skills",

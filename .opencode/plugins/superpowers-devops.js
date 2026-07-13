@@ -14,7 +14,7 @@ module.exports = {
     try {
       const content = fs.readFileSync(skillPath, 'utf8');
       return {
-        systemMessage: `<EXTREMELY_IMPORTANT>\nYou have superpowers-devops.\n\n${content}\n</EXTREMELY_IMPORTANT>`
+        systemMessage: `<EXTREMELY_IMPORTANT>\nYou have superpowers-devops.\n\n**IMPORTANT: The using-superpowers-devops skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers-devops" again - that would be redundant.**\n\n${content}\n</EXTREMELY_IMPORTANT>`
       };
     } catch (e) {
       return {};

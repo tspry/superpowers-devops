@@ -1,0 +1,63 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "S3ReadAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-app-data-*",
+        "arn:aws:s3:::my-app-data-*/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceAccount": "123456789012"
+        }
+      }
+    },
+    {
+      "Sid": "DynamoDBReadWrite",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query",
+        "dynamodb:DescribeTable"
+      ],
+      "Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/my-app-*"
+    },
+    {
+      "Sid": "KMSDecryptForDataAccess",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey"
+      ],
+      "Resource": "arn:aws:kms:us-east-1:123456789012:key/my-app-encryption-key-*",
+      "Condition": {
+        "ForAnyValue:StringLike": {
+          "kms:ViaService": [
+            "s3.us-east-1.amazonaws.com",
+            "dynamodb.us-east-1.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyDangerousActions",
+      "Effect": "Deny",
+      "Action": [
+        "iam:*",
+        "kms:ScheduleKeyDeletion",
+        "s3:DeleteBucket",
+        "dynamodb:DeleteTable"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

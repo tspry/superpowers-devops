@@ -5,13 +5,11 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute a plan by dispatching a fresh subagent per task, with two-stage review after each: spec compliance first, then code quality.
+Execute a plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
 
-**Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused. They should never inherit your session's history — you construct exactly what they need. This preserves your own context for coordination work.
+**Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration.
-
-**Continuous execution:** Do not pause to check in between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete.
+**Narration:** between tool calls, narrate at most one short line — the ledger and the tool results carry the record.
 
 ## When to Use
 
@@ -25,6 +23,14 @@ Execute a plan by dispatching a fresh subagent per task, with two-stage review a
 - Fresh subagent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
+
+## Pre-Flight Plan Review
+
+Before dispatching Task 1, scan the plan once for conflicts:
+- tasks that contradict each other or the plan's Global Constraints
+- anything the plan explicitly mandates that the review rubric treats as a defect
+
+Present everything you find to your human partner as one batched question — each finding beside the plan text that mandates it, asking which governs — before execution begins, not one interrupt per discovery mid-plan. If the scan is clean, proceed without comment.
 
 ## The Process
 
@@ -46,9 +52,21 @@ Execute a plan by dispatching a fresh subagent per task, with two-stage review a
 
 ## Model Selection
 
-- **Mechanical tasks** (isolated functions, clear specs, 1-2 files): cheap/fast model
-- **Integration tasks** (multi-file, pattern matching, debugging): standard model
-- **Architecture/review tasks**: most capable model
+Use the least powerful model that can handle each role to conserve cost and increase speed.
+
+**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model.
+**Integration and judgment tasks** (multi-file coordination, debugging): use a standard model.
+**Architecture and design tasks**: use the most capable available model.
+**Review tasks**: choose the model scaled to the diff's size, complexity, and risk.
+
+**Always specify the model explicitly when dispatching a subagent.** An omitted model inherits your session's model — often the most capable and most expensive — which silently defeats this section.
+
+**Turn count beats token price.** Wall-clock and context cost scale with how many turns a subagent takes. Use a mid-tier model as the floor for reviewers and for implementers working from prose descriptions.
+
+**Task complexity signals (implementation tasks):**
+- Touches 1-2 files with a complete spec → cheap model
+- Touches multiple files with integration concerns → standard model
+- Requires design judgment or broad codebase understanding → most capable model
 
 ## Handling Implementer Status
 
@@ -59,22 +77,39 @@ Execute a plan by dispatching a fresh subagent per task, with two-stage review a
 
 **Never** ignore a BLOCKED status or force retry without changes.
 
+## Handling Reviewer ⚠️ Items
+
+The task reviewer may report "⚠️ Cannot verify from diff" items — requirements that live in unchanged code or span tasks. These do not block the rest of the review, but you must resolve each one yourself before marking the task complete: you hold the plan and cross-task context the reviewer lacks. If you confirm an item is a real gap, treat it as a failed spec review — send it back to the implementer and re-review.
+
 ## Prompt Templates
 
 - `./implementer-prompt.md` — Dispatch implementer subagent
 - Use `superpowers-devops:requesting-code-review` for reviewer subagents
 
+## Constructing Reviewer Prompts
+
+- Do not add open-ended directives like "check all uses" without a concrete, task-specific reason
+- Do not ask a reviewer to re-run tests the implementer already ran
+- Do not pre-judge findings for the reviewer — never instruct a reviewer to ignore or not flag a specific issue
+- A dispatch prompt describes one task, not the session's history. Do not paste accumulated prior-task summaries into later dispatches
+- Dispatch fix subagents for Critical and Important findings. Record Minor findings for the final whole-branch review
+- If the final whole-branch review returns findings, dispatch ONE fix subagent with the complete findings list — not one fixer per finding
+
 ## Red Flags
 
 **Never:**
 - Start on main/master branch without explicit user consent
-- Skip spec compliance review OR code quality review
+- Skip task review, or accept a report missing either verdict (spec compliance AND task quality are both required)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflict risk)
-- Make subagent read plan file directly (provide full text instead)
-- Accept "close enough" on spec compliance
+- Make a subagent read the whole plan file (provide its task brief instead)
+- Skip scene-setting context (subagent needs to understand where task fits)
+- Ignore subagent questions (answer before letting them proceed)
+- Accept "close enough" on spec compliance (reviewer found spec issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
-- Start code quality review before spec compliance is ✅
+- Let implementer self-review replace actual review (both are needed)
+- Tell a reviewer what not to flag, or pre-rate a finding's severity in the dispatch prompt
+- Move to next task while the review has open Critical/Important issues
 
 ## Integration
 

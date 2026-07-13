@@ -24,8 +24,8 @@ Skills know where their relevant tooling templates live. In repo mode, agents sc
 Each skill lives in `skills/<skill-name>/SKILL.md`. The frontmatter has `name` and `description` fields. The body defines when the skill applies, what the agent should do, and (for DevOps skills) which `tooling/` paths to reference.
 
 Skill categories:
-- **Workflow** (`brainstorming`, `writing-plans`, `executing-plans`, `using-git-worktrees`, `verification-before-completion`) — process and orchestration
-- **DevOps** (`infrastructure-provisioning`, `container-operations`, `ci-cd-pipeline`, `cloud-operations`, `monitoring-and-alerting`, `secrets-management`, `network-operations`, `reverse-proxy`, `dns-and-domains`, `load-balancing`) — domain-specific guidance
+- **Workflow** (`brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `dispatching-parallel-agents`, `test-driven-development`, `requesting-code-review`, `receiving-code-review`, `finishing-a-development-branch`, `using-git-worktrees`, `verification-before-completion`, `writing-skills`) — process and orchestration
+- **DevOps** (`infrastructure-provisioning`, `container-operations`, `kubernetes`, `ci-cd-pipeline`, `cloud-operations`, `monitoring-and-alerting`, `secrets-management`, `network-operations`, `reverse-proxy`, `dns-and-domains`, `load-balancing`) — domain-specific guidance
 - **Code Analysis** (`systematic-debugging`, `code-audit`, `code-optimization`, `error-reading`) — diagnosis loop: audit → optimize → read errors → debug root cause
 
 ### Tooling
@@ -75,3 +75,8 @@ Commands in `commands/` map directly to skills:
 - **Dual-mode** — every skill works with or without a local repo
 - **Skills reference real tooling** — DevOps skills specify exact `tooling/` paths
 - **Generic + opinionated** — generic templates for flexibility, `starters/` for speed
+
+## Verification
+
+- Run `bash tests/validate.sh` for a structural check (frontmatter, path references, conventions)
+- `.pre-commit-config.yaml` provides pre-commit hooks for basic validation before commits

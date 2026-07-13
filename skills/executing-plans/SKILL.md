@@ -11,7 +11,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Superpowers works much better with subagent support. If subagents are available (Claude Code, Codex), use `superpowers-devops:subagent-driven-development` instead — it provides two-stage review and faster iteration within the same session.
+**Note:** Superpowers works much better with subagent support. If subagents are available (Claude Code, Codex CLI, Codex App, Copilot CLI all qualify), use `superpowers-devops:subagent-driven-development` instead — it provides two-stage review and faster iteration within the same session.
 
 ## The Process
 
@@ -20,7 +20,7 @@ Load plan, review critically, execute all tasks, report when complete.
 1. Read plan file
 2. Review critically — identify questions or concerns
 3. If concerns: raise them before starting
-4. If no concerns: create TodoWrite and proceed
+4. If no concerns: create todos for the plan items and proceed
 
 ### Step 2: Execute Tasks
 

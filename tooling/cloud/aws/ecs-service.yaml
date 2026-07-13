@@ -1,0 +1,86 @@
+---
+# CloudFormation-compatible minimal ECS service + task definition
+# Substitute your account ID, region, and ECR repository.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "ECS service and task definition for my-app"
+
+Parameters:
+  ServiceName:
+    Type: String
+    Default: my-app
+    Description: Name of the ECS service and task definition family
+  ContainerImage:
+    Type: String
+    Default: 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:v1.0.0
+    Description: ECR image URI (immutable tag)
+  ContainerPort:
+    Type: Number
+    Default: 8080
+    Description: Port the container listens on
+  CpuUnits:
+    Type: String
+    Default: "256"
+    Description: Task-level CPU units
+  MemoryMiB:
+    Type: String
+    Default: "512"
+    Description: Task-level memory in MiB
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production, staging, development]
+
+Resources:
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref ServiceName
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${ServiceName}-task-role"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: !Ref CpuUnits
+      Memory: !Ref MemoryMiB
+      ContainerDefinitions:
+        - Name: !Ref ServiceName
+          Image: !Ref ContainerImage
+          Essential: true
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub "/ecs/${ServiceName}"
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+      Tags:
+        - Key: Name
+          Value: !Ref ServiceName
+        - Key: Environment
+          Value: !Ref Environment
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Ref ServiceName
+      Cluster: !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ServiceName}"
+      TaskDefinition: !Ref TaskDefinition
+      LaunchType: FARGATE
+      DesiredCount: 2
+      DeploymentController:
+        Type: ECS
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Sub "sg-${ServiceName}-app"
+          Subnets:
+            - !Sub "subnet-${ServiceName}-private-a"
+            - !Sub "subnet-${ServiceName}-private-b"
+      Tags:
+        - Key: Name
+          Value: !Ref ServiceName
+        - Key: Environment
+          Value: !Ref Environment

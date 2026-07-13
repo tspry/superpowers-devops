@@ -1,0 +1,91 @@
+---
+# Minimal Lambda function configuration
+# Substitute account ID, region, and S3 bucket for your deployment artifacts.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Lambda function for my-app service"
+
+Parameters:
+  FunctionName:
+    Type: String
+    Default: my-app-handler
+    Description: Name of the Lambda function
+  Runtime:
+    Type: String
+    Default: nodejs20.x
+    AllowedValues:
+      - nodejs18.x
+      - nodejs20.x
+      - python3.12
+      - python3.13
+    Description: Lambda runtime identifier
+  Handler:
+    Type: String
+    Default: index.handler
+    Description: Function handler (file.function)
+  MemorySize:
+    Type: Number
+    Default: 256
+    Description: Memory in MB (128–10240)
+  Timeout:
+    Type: Number
+    Default: 30
+    MinValue: 1
+    MaxValue: 900
+    Description: Function timeout in seconds
+  S3Bucket:
+    Type: String
+    Default: my-app-lambda-artifacts
+    Description: S3 bucket containing the deployment package
+  S3Key:
+    Type: String
+    Default: functions/my-app-handler.zip
+    Description: S3 key of the deployment package
+
+Resources:
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${FunctionName}-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${FunctionName}-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/my-app-*"
+      Tags:
+        - Key: Name
+          Value: !Ref FunctionName
+
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Role: !GetAtt FunctionRole.Arn
+      Runtime: !Ref Runtime
+      Handler: !Ref Handler
+      MemorySize: !Ref MemorySize
+      Timeout: !Ref Timeout
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
+      Environment:
+        Variables:
+          LOG_LEVEL: info
+          NODE_ENV: production
+      Tags:
+        - Key: Name
+          Value: !Ref FunctionName

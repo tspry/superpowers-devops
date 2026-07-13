@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: validate-skill-frontmatter
+        name: Validate SKILL.md has name+description frontmatter
+        entry: bash -c 'for f in "$@"; do head -1 "$f" | grep -q "^---" || { echo "MISSING FRONTMATTER: $f"; exit 1; }; block=$(sed -n "2,/^---/p" "$f"); echo "$block" | grep -q "^name:" || { echo "MISSING name: in $f"; exit 1; }; echo "$block" | grep -q "^description:" || { echo "MISSING description: in $f"; exit 1; }; done'
+        language: system
+        files: 'skills/.*/SKILL\.md$'
+        pass_filenames: true

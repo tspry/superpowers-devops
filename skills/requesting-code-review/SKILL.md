@@ -29,7 +29,7 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code reviewer subagent** using Task tool with `general-purpose` type, filling the template at `requesting-code-review/code-reviewer.md`.
+**2. Dispatch code reviewer subagent** — dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md).
 
 **Placeholders:**
 - `{DESCRIPTION}` — Brief summary of what you built
@@ -52,4 +52,4 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **If reviewer is wrong:** Push back with technical reasoning and show evidence.
 
-See template at: `requesting-code-review/code-reviewer.md`
+See template at: [code-reviewer.md](code-reviewer.md)

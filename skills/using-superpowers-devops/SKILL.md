@@ -1,6 +1,6 @@
 ---
 name: using-superpowers-devops
-description: Use at session start — orients the agent to the full DevOps skill set and when to invoke each skill automatically
+description: Use at session start — orients the agent to the full DevOps skill set and when to invoke each skill automatically. If there is even a 1% chance a skill applies, check it before acting.
 ---
 
 # superpowers-devops
@@ -9,17 +9,18 @@ You have superpowers-devops. This plugin gives you a complete DevOps intelligenc
 
 ## Instruction Priority
 
-Superpowers-devops skills override default system prompt behavior, but **user instructions always take precedence**:
-
-1. **User's explicit instructions** (CLAUDE.md, direct requests) — highest priority
-2. **Superpowers-devops skills** — override default system behavior where they conflict
-3. **Default system prompt** — lowest priority
-
-If CLAUDE.md says "skip brainstorming" and a skill says "always brainstorm," follow the user's instructions. The user is in control.
+User instructions (CLAUDE.md, AGENTS.md, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows when your human partner has explicitly told you to.
 
 ## The Rule
 
 **Invoke the relevant skill BEFORE any action.** Even a 1% chance a skill applies means you must check. Skills tell you HOW to approach a task — they are not optional.
+
+## Skill Priority
+
+When multiple skills apply, process skills come first — they set the approach, then implementation skills carry it out.
+
+- "Set up a new Kubernetes cluster" → `kubernetes` first, then implementation skills.
+- "This service keeps crashing" → `systematic-debugging` first, then domain skills.
 
 ## When to Invoke Each Skill
 
@@ -33,7 +34,8 @@ If CLAUDE.md says "skip brainstorming" and a skill says "always brainstorm," fol
 | User asks to review code quality or DevOps readiness | `code-audit` |
 | User wants to optimize code, fix memory leaks, loops | `code-optimization` |
 | Working with Terraform, Ansible, or Pulumi | `infrastructure-provisioning` |
-| Working with Docker, Kubernetes, or Helm | `container-operations` |
+| Working with Docker | `container-operations` |
+| Working with Kubernetes or Helm | `kubernetes` |
 | Working with CI/CD pipelines | `ci-cd-pipeline` |
 | Working with AWS, GCP, or Azure | `cloud-operations` |
 | Working with Prometheus, Grafana, or logs | `monitoring-and-alerting` |
@@ -48,6 +50,8 @@ If CLAUDE.md says "skip brainstorming" and a skill says "always brainstorm," fol
 | Receiving code review feedback | `receiving-code-review` |
 | Need to request a code review | `requesting-code-review` |
 | 2+ independent problems to investigate in parallel | `dispatching-parallel-agents` |
+| Creating or editing a skill | `writing-skills` |
+| Writing tests, or any code where tests should drive implementation | `test-driven-development` |
 
 ## Dual-Mode Awareness
 
@@ -67,3 +71,9 @@ Most skills work in both modes. Adapt based on what's available.
 | "Let me just apply this fix" | `systematic-debugging` first. |
 | "I know how to write a Dockerfile" | `container-operations` skill first. |
 | "This is obvious" | Obvious tasks become complex. Use the skill. |
+| "Let me explore the infrastructure" | Skills tell you HOW to explore. Check first. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |

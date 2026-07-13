@@ -1,0 +1,20 @@
+{
+  "name": "superpowers-devops",
+  "interface": {
+    "displayName": "Superpowers DevOps"
+  },
+  "plugins": [
+    {
+      "name": "superpowers-devops",
+      "source": {
+        "source": "url",
+        "url": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

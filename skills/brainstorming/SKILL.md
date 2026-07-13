@@ -136,3 +136,5 @@ Wait for the user's response. Only proceed once the user approves.
 - **Incremental** — can this be rolled out gradually?
 - **Explore alternatives** — always propose 2-3 approaches before settling
 - **Incremental validation** — present design, get approval before moving on
+- **Multiple choice preferred** — easier to answer than open-ended when possible
+- **Be flexible** — go back and clarify when something doesn't make sense
