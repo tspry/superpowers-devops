@@ -9,7 +9,7 @@
     {
       "name": "superpowers-devops",
       "description": "Unified DevOps intelligence layer: CI/CD, IaC, containers, cloud, monitoring, networking, code analysis, and debugging skills",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "source": "./"
     }
   ]

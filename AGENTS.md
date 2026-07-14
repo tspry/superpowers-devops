@@ -41,6 +41,19 @@ The `description` field in each `SKILL.md` is the **trigger** that decides when 
 
 **Skill count discipline:** Skill count is near the maintainability ceiling — require a deprecate-before-add decision before introducing a new skill.
 
+## Plugin version sync
+
+The plugin version is duplicated across every platform manifest. **When bumping the version, update ALL of these or the plugin will report inconsistent versions per platform:**
+
+- `package.json` — **source of truth** (`version` field)
+- `.claude-plugin/plugin.json` — `version`
+- `.claude-plugin/marketplace.json` — `plugins[].version`
+- `gemini-extension.json` — `version`
+- `.kimi-plugin/plugin.json` — `version`
+- `.cursor-plugin/plugin.json` — `version`
+
+Do **not** touch the `1.17.x` version in `.opencode/package-lock.json` — that is the `@opencode-ai/plugin` *runtime dependency*, not this plugin's own version.
+
 ## Git
 
 `main` branch. Commits follow an "sync from upstream" style; there is no CI. Keep changes focused and update the relevant instruction files alongside content edits.
