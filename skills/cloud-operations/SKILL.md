@@ -7,7 +7,7 @@ description: Use when working with AWS, GCP, or Azure resource management, permi
 
 ## Mode Detection
 
-- **Repo mode** — templates in `tooling/cloud/`. Scaffold IAM policies, cloud configs.
+- **Repo mode** — check `tooling/README.md` for shipped AWS examples and prerequisites; generate other cloud configs from the project's conventions.
 - **Chat mode** — user pastes cloud error or config. Diagnose and provide corrected config.
 
 ## AWS
@@ -79,5 +79,4 @@ az aks get-credentials --resource-group my-rg --name my-cluster
 ## Tooling Templates
 
 - `tooling/cloud/aws/` — IAM, ECS, Lambda, S3 configs
-- `tooling/cloud/gcp/` — GKE, Cloud Run, IAM configs
-- `tooling/cloud/azure/` — AKS, App Service configs
+- `tooling/cloud/gcp/` and `tooling/cloud/azure/` — guidance only; no bundled configs

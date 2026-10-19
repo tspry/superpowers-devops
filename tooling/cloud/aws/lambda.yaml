@@ -11,10 +11,9 @@ Parameters:
     Description: Name of the Lambda function
   Runtime:
     Type: String
-    Default: nodejs20.x
+    Default: nodejs22.x
     AllowedValues:
-      - nodejs18.x
-      - nodejs20.x
+      - nodejs22.x
       - python3.12
       - python3.13
     Description: Lambda runtime identifier

@@ -7,7 +7,7 @@ description: Use when working with Nginx, Traefik, or HAProxy — setup, config 
 
 ## Mode Detection
 
-- **Repo mode** — templates in `tooling/network/`. Scaffold or modify proxy configs.
+- **Repo mode** — inspect existing proxy configs; check `tooling/README.md` before scaffolding. Proxy templates are not bundled.
 - **Chat mode** — user pastes config or error. Diagnose and provide corrected config.
 
 ## Nginx
@@ -86,7 +86,4 @@ systemctl reload haproxy                   # reload
 
 ## Tooling Templates
 
-- `tooling/network/nginx/` — nginx.conf templates, reverse proxy configs
-- `tooling/network/traefik/` — traefik.yml, dynamic configs
-- `tooling/network/haproxy/` — haproxy.cfg templates
-- `tooling/network/starters/` — full reverse proxy + SSL setups
+- `tooling/network/nginx/` — guidance only. Generate Nginx, Traefik, or HAProxy configs for the installed version and validate them; no proxy starters are bundled.

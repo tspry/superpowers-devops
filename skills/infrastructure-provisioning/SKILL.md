@@ -15,7 +15,7 @@ Always run `terraform plan` / `ansible --check` / `pulumi preview` and review ou
 
 ## Mode Detection
 
-- **Repo mode** — IaC files available in `tooling/iac/`. Scaffold, modify, and run commands.
+- **Repo mode** — inspect the project's IaC and state/backend conventions. Check `tooling/README.md` before scaffolding; no Terraform, Ansible, or Pulumi modules are bundled.
 - **Chat mode** — user pastes IaC code or error output. Provide inline review and corrected snippets.
 
 ## Process
@@ -60,8 +60,7 @@ pulumi up
 
 ## Tooling Templates
 
-Generic modules: `tooling/iac/terraform/`, `tooling/iac/ansible/`, `tooling/iac/pulumi/`
-Opinionated starters: `tooling/iac/starters/`
+`tooling/iac/terraform/` contains guidance only. Generate project-specific IaC and validate with the project's tools; do not present missing modules or starters as copy-ready assets.
 
 ## Common Mistakes
 

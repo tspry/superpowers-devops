@@ -7,7 +7,7 @@ description: Use when working with load balancer configuration, upstream health 
 
 ## Mode Detection
 
-- **Repo mode** — templates in `tooling/network/`. Scaffold or modify load balancer configs.
+- **Repo mode** — inspect existing load balancer configs and generate changes for the installed platform. Check `tooling/README.md`; load balancer templates are not bundled.
 - **Chat mode** — user pastes config or describes traffic issue. Diagnose and provide corrected config.
 
 ## Core Concepts

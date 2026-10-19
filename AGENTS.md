@@ -4,15 +4,15 @@ Guidance for OpenCode (and other AI coding agents) working in this repo.
 
 ## What this repo is
 
-A **plugin**, not an app or library. It ships AI-agent **skills** (behavior instructions) plus **tooling templates** (copy-ready configs). There is no runtime code to execute here.
+A **plugin**, not an app or library. It ships AI-agent **skills**, platform adapters, and a small set of adaptable **tooling examples**. `tooling/README.md` is the exact shipped inventory; other domains are guidance only.
 
-- **No build, no test runner, no linter, no dev server.** `package.json` is metadata only (no `scripts`). Content is plain Markdown/JSON/YAML — verification is reading and checking consistency, not running a suite.
+- **No application build, framework test runner, or dev server.** Root `package.json` is metadata only (no `scripts`). Small executable checks live in `tests/`; see `tests/README.md` for required commands and evidence limits.
 - **No new external dependencies.** `.opencode/` has its own `package.json` + `node_modules` for the plugin runtime — that is expected. Never add npm/pip/gem deps outside it.
 
 ## Structure
 
 - `skills/<name>/SKILL.md` — each skill. Frontmatter must have `name` and `description`.
-- `tooling/<domain>/...` — templates (Dockerfiles, TF, k8s, CI, nginx, etc.). Generic templates at domain root; some domains (currently `ci/`, `monitoring/`) have opinionated `starters/` subdirectories.
+- `tooling/<domain>/...` — Helm/AWS examples plus guidance-only directories. Do not claim missing templates/starters are bundled; update the inventory when assets change.
 - `commands/<name>.md` — slash commands, each maps 1:1 to a skill.
 - `agents/` — reusable agent definitions (e.g. `devops-debugger.md`).
 - Platform wiring: `.claude-plugin/`, `.cursor-plugin/`, `.codex/`, `.opencode/`, `gemini-extension.json`, `hooks/`.
@@ -25,7 +25,7 @@ The `description` field in each `SKILL.md` is the **trigger** that decides when 
 
 ## Entrypoint
 
-`skills/using-superpowers-devops/SKILL.md` is injected at session start and holds the **trigger table** (situation → skill). For OpenCode this is done by `.opencode/plugins/superpowers-devops.js`; for Claude/Cursor by `hooks/session-start` (driven by `hooks/hooks.json`, matcher `startup|clear|compact`, Windows entry `run-hook.cmd`). Do not break this injection — it is how the whole plugin activates.
+`skills/using-superpowers-devops/SKILL.md` holds the **trigger table** (situation → skill). OpenCode's adapter injects it for parent sessions; Claude uses `hooks/hooks.json`, Cursor uses its separate `hooks/hooks-cursor.json` schema, both launching `hooks/session-start` through `run-hook.cmd`. Native skill-only installations require an explicit entrypoint load. Do not conflate these host contracts.
 
 ## Conventions when changing skills
 
@@ -64,7 +64,11 @@ Do **not** touch the `1.17.x` version in `.opencode/package-lock.json` — that 
 ```
 bash tests/validate.sh
 ```
-There is no test suite, linter, or build step. "Verification" means this script + manual content review.
+Also run the applicable contract/template checks in `tests/README.md` and review changed instructions manually. No cloud apply is part of repository validation. A passing synthetic contract check does not certify a host installation or agent behavior.
+
+## Upstream maintenance
+
+`docs/upstream-sync.md` records the reviewed revisions for **obra/superpowers** and **LukasNiessen/kubernetes-skill**, mappings, deviations, and the fetch/diff/check procedure. Update it whenever adapting either upstream. Preserve DevOps scope, local controls, and licensing; do not blindly merge generic workflows or copy unvalidated platform claims.
 
 ## Boundaries (never touch unless asked)
 

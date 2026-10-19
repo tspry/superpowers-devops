@@ -1,0 +1,3 @@
+# Both files are interpreted by Bash, including on Git for Windows.
+hooks/run-hook.cmd text eol=lf
+hooks/session-start text eol=lf

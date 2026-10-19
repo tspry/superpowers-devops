@@ -5,6 +5,8 @@ description: Use when reviewing code or a codebase for DevOps readiness, securit
 
 # Code Audit
 
+Apply checks to the repository's actual role and deployed components. Mark categories not applicable with a reason: a content-only plugin does not need a Dockerfile, deployment pipeline, or IaC just to pass an audit. Separate absent applicable controls from deliberately absent application infrastructure.
+
 ## Works In Both Modes
 
 - **Repo mode** — scan actual files in the working directory

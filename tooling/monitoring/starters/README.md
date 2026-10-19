@@ -1,18 +1,5 @@
-# Observability Starters
+# Observability Starters — Not Shipped
 
-Full observability stacks ready to deploy.
+No Prometheus/Grafana/Loki deployment stacks are bundled. Use the `monitoring-and-alerting` skill with the user's existing stack or an explicitly selected, pinned upstream chart. Confirm metric labels and evaluate alert rules against representative data before rollout.
 
-## Available
-
-- `prometheus-grafana/` — Prometheus + Grafana + Alertmanager on Docker Compose
-- `prometheus-grafana-k8s/` — Same stack on Kubernetes via Helm (kube-prometheus-stack)
-- `loki-grafana/` — Loki + Promtail + Grafana for log aggregation
-
-## Quick Start (Docker Compose)
-
-```bash
-cd prometheus-grafana
-docker compose up -d
-# Grafana: http://localhost:3000 (admin/admin)
-# Prometheus: http://localhost:9090
-```
+See the [shipped inventory](../../README.md).

@@ -1,6 +1,6 @@
 {
   "name": "superpowers-devops",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Unified DevOps intelligence layer: CI/CD, IaC, containers, cloud, monitoring, networking, code analysis, and debugging skills",
   "author": {
     "name": "superpowers-devops contributors"
@@ -33,6 +33,6 @@
       "Read",
       "Write"
     ],
-    "websiteURL": "https://github.com/personal/superpowers-devops"
+    "websiteURL": "https://github.com/tspry/superpowers-devops"
   }
 }

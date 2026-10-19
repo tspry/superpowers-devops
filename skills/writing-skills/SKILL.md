@@ -173,8 +173,8 @@ If the skill references `tooling/` templates (Terraform files, Dockerfiles, CI c
 
 Example from `infrastructure-provisioning`:
 ```markdown
-For Terraform: scaffold from `tooling/iac/terraform/`
-For Ansible: scaffold from `tooling/iac/ansible/`
+For a shipped Helm example: inspect `tooling/containers/helm/` and its prerequisites.
+For Terraform or Ansible: inspect the project's IaC; no modules are bundled. Check `tooling/README.md` before promising a template.
 ```
 
 ### Dual-Mode Awareness
@@ -185,6 +185,10 @@ Every DevOps skill must work in two modes:
 - **Chat mode** — no local repo. User is pasting errors, logs, or manifests. Provide inline guidance and copy-paste-ready fixes.
 
 Detect which mode you're in and adapt. Don't assume file access.
+
+### Bundled Script Invocation
+
+Invoke scripts through their interpreter in guidance: `bash scripts/check.sh`, `node scripts/tool.js`, or `python scripts/tool.py`. Bare executable paths can fail when plugin packaging strips executable bits. Reference only scripts actually shipped with this plugin.
 
 ### Example: Creating a Kubernetes-Observability Skill
 
@@ -217,7 +221,22 @@ Run same scenarios WITH skill. Agent should now comply.
 
 Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
+## Match the Guidance to the Failure
+
+Classify the observed failure before adding rules:
+
+| Failure | Guidance form |
+|---|---|
+| Knows a safety rule but skips it under pressure | Explicit prohibition, rationalization table, and red flags |
+| Produces the wrong output shape | Positive recipe showing required parts and their order |
+| Omits a required element | Required field in the template being filled in |
+| Behavior depends on context | Conditional tied to an observable fact, such as "if no cluster access, mark rollout unverified" |
+
+Do not use a growing prohibition list to fix an output-format problem. Avoid vague exemptions such as "unless relevant"; express genuine exceptions as explicit conditionals. Evaluate changed wording against the observed failure rather than assuming more forceful prose works better.
+
 ## Bulletproofing Skills Against Rationalization
+
+Use this section for skipped rules under pressure; use recipes and required fields for wrong-shaped or incomplete output.
 
 ### Close Every Loophole Explicitly
 

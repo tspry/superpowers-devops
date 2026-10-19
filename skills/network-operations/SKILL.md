@@ -38,11 +38,12 @@ fuser <port>/tcp
 
 ## Firewall (Linux — iptables / ufw / firewalld)
 
+Before changing rules or routes, confirm the host/account and authorized source CIDRs, save the current rules, review the diff, and obtain approval. For remote hosts, keep the current SSH session, verify an alternate console/recovery path, and test a second SSH connection before closing the first. Preserve management access; never deny SSH or flush rules as a generic fix. Provide a tool-specific rollback and test allowed **and denied** traffic from the intended sources.
+
 ```bash
 # ufw (Ubuntu)
 ufw status verbose
 ufw allow 443/tcp
-ufw deny 22/tcp
 ufw reload
 
 # firewalld (CentOS/RHEL)
@@ -62,17 +63,17 @@ iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 # List security group rules
 aws ec2 describe-security-groups --group-ids sg-xxxxxxxx
 
-# Add inbound rule
+# Add inbound rule only after scope/approval review; replace with the actual source CIDR
 aws ec2 authorize-security-group-ingress \
   --group-id sg-xxxxxxxx \
-  --protocol tcp --port 443 --cidr 0.0.0.0/0
+  --protocol tcp --port 443 --cidr <approved-source-cidr>
 ```
 
 **GCP:**
 ```bash
 gcloud compute firewall-rules list
 gcloud compute firewall-rules create allow-https \
-  --allow tcp:443 --source-ranges 0.0.0.0/0
+  --allow tcp:443 --source-ranges <approved-source-cidr> --target-tags <target-tag>
 ```
 
 ## Common Network Issues

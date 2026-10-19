@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Structural validation for superpowers-devops skills.
-# No dependencies beyond bash + grep + sed.
+# Uses standard shell tools and Git for tracked hook permissions.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -38,6 +38,20 @@ if [ -f "$TRIGGER_FILE" ]; then
   done
   echo "  Trigger table references $(echo "$referenced" | wc -l | tr -d ' ') backtick entries"
 fi
+
+echo ""
+echo "Validating tracked hook executable permissions..."
+# Windows/core.filemode=false hides missing executable bits in the working tree.
+# Check Git's index: that mode is what a fresh Unix install receives.
+for hook in hooks/run-hook.cmd hooks/session-start; do
+  entry=$(git -C "$REPO_ROOT" ls-files --stage -- "$hook")
+  if [[ "$entry" == 100755\ * ]]; then
+    echo "  OK: $hook"
+  else
+    echo "  FAIL: $hook must be tracked as executable (100755)"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
 
 echo ""
 if [ $ERRORS -gt 0 ]; then

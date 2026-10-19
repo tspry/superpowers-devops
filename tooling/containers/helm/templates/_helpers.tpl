@@ -1,3 +1,11 @@
+{{- define "my-app.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+{{- default (include "my-app.fullname" .) .Values.serviceAccount.name -}}
+{{- else -}}
+{{- required "serviceAccount.name is required when serviceAccount.create=false" .Values.serviceAccount.name -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "my-app.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}

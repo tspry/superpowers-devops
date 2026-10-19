@@ -7,11 +7,11 @@ description: Use after brainstorming to create a detailed, step-by-step implemen
 
 ## Purpose
 
-Turn an approved design into a plan clear enough for a subagent to execute without deviation. Document everything needed: which files to touch, exact commands, how to verify, and how to roll back.
+Turn an approved design into decisions an engineer can execute without the conversation: exact files, resource names, interfaces, pinned values, verification commands, and rollback. Assume the engineer can write idiomatic code or configuration; the plan supplies decisions, not a transcript of the implementation.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md` and commit before executing.
+**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md` (user preferences override). In chat mode, provide the plan inline. Commit only when requested or authorized by the user's workflow.
 
 ## Plan Document Header
 
@@ -20,7 +20,7 @@ Turn an approved design into a plan clear enough for a subagent to execute witho
 ```markdown
 # [Feature/Change Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-devops:subagent-driven-development (recommended) or superpowers-devops:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Use superpowers-devops:subagent-driven-development or superpowers-devops:executing-plans according to the user's execution choice. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing the end state]
 
@@ -28,9 +28,15 @@ Turn an approved design into a plan clear enough for a subagent to execute witho
 
 **Architecture:** [2-3 sentences about approach]
 
+**Spec:** [Path to the approved design, or the inline requirements when no file exists]
+
 ## Global Constraints
 
 [The spec's project-wide requirements — version floors, dependency limits, naming rules, platform requirements — one line each, with exact values copied verbatim from the spec. Every task's requirements implicitly include this section.]
+
+## Review Focus
+
+[Up to five plausible failure modes not yet covered by task checks: wrong account/region/context, state drift, missing permissions, rollout failure, or rollback failure. Name the expected behavior and add the check to the owning task. If none remain, say what you checked.]
 
 ---
 ```
@@ -47,11 +53,11 @@ Each plan must include:
 
 ## Bite-Sized Step Granularity
 
-**Each step is one action (2-5 minutes):**
+**Each step is one action with a checkable result:**
 - "Run `terraform plan` and review output" — step
 - "Apply the plan after review" — step
 - "Verify the resource exists in the expected state" — step
-- "Commit" — step
+- "Commit, if authorized" — step
 
 ## Step Format
 
@@ -60,9 +66,12 @@ Each plan must include:
 
 **What:** <one sentence>
 
+**Files:** <exact paths to create or modify>
+**Interfaces:** <inputs/outputs, resource addresses, variable names, or contracts consumed/produced by this task>
+
 - [ ] <exact command or file change>
 - [ ] <verification step>
-- [ ] Commit
+- [ ] Commit (only if authorized)
 
 **Done when:** <observable condition>
 **Rollback:** <how to undo this task>
@@ -88,17 +97,28 @@ A task is the smallest unit that carries its own test cycle and is worth a fresh
 
 After writing the complete plan, check the plan against the spec:
 1. **Spec coverage:** Can you point to a task that implements each spec requirement? List any gaps.
-2. **Placeholder scan:** Search for "TBD", "TODO", "implement later", "add appropriate error handling", "write tests for the above" (without actual test code), "similar to Task N" (repeat the code). Fix any found.
+2. **Step scan:** Remove placeholders and vague instructions; each step must make the required change unambiguous without writing out routine implementation bodies.
 3. **Type consistency:** Do types, method signatures, and names in later tasks match what earlier tasks defined?
+4. **Review focus:** Does each listed failure mode have a check in its owning task? Distinguish offline validation from evidence requiring a live environment.
+5. **Proportion:** If implementation code dominates the plan, replace routine bodies with interfaces, exact required fields/values, and assertions. Keep code only where the contract and tests leave an important algorithm undecided.
 
 Fix issues inline. If a spec requirement has no task, add the task.
 
-## No Placeholders
+## What a Step Contains
 
-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
-- "TBD", "TODO", "implement later", "fill in details"
-- "Add appropriate error handling" / "add validation" / "handle edge cases"
-- "Write tests for the above" (without actual test code)
-- "Similar to Task N" (repeat the code — the engineer may read tasks out of order)
-- Steps that describe what to do without showing how
-- References to types, functions, or methods not defined in any task
+- **Test:** Name and executable assertions, with expected values derived from requirements rather than copied from the implementation. Schema/lint checks alone do not prove rollout behavior.
+- **Code/config:** Exact file, signature or resource identity, required fields/values, and approach where there is a meaningful choice. Let the implementer write the body; include exact config only when its contents are the decision.
+- **Verification:** Exact command, target environment, expected exit status/output, and what it proves. Mark checks needing unavailable credentials or cluster access as unverified, not passed.
+- **Cross-task reference:** Use the producing task's Interfaces block instead of duplicating its implementation.
+- **Rollback:** Concrete reversal and a check that service/state recovered; note any irreversible consequences.
+
+"TBD", "handle edge cases", "add appropriate validation", and references no task defines are missing decisions, not a plan.
+
+## Execution Handoff
+
+Link the saved plan for user review before execution. Preserve an execution method the user already chose. Otherwise offer:
+
+- **Subagent-driven:** A fresh implementer and one task reviewer per task, then a whole-change review. Useful for independent, higher-risk tasks; costs more contexts.
+- **Native (inline):** Implement the plan yourself in this session with progress and evidence recorded, then review the whole change. Useful for tightly related or routine work; no independent per-task gate.
+
+Recommend one using the plan's dependencies and operational risk. Use `subagent-driven-development` or `executing-plans` after the user reviews the plan and selects the method. If delegation is unavailable or prohibited, use inline execution and report the review limitation.

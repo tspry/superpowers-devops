@@ -1,30 +1,12 @@
-# Secret & Vulnerability Scanning
+# Secret & Vulnerability Scanning Guidance
 
-Config files for secret scanning and vulnerability detection tools.
+No scanner configuration files or CI workflows are shipped here. Use an installed scanner's defaults or an existing project config, not a nonexistent bundled config.
 
-## Tools
-
-### gitleaks
-Scans git repos for leaked secrets.
 ```bash
-gitleaks detect --source . --config .gitleaks.toml
+# Redact findings; do not paste raw credentials into chat or logs.
+gitleaks git . --redact
+# Substitute an actual immutable image tag or digest.
+trivy image myapp:1.0.0
 ```
 
-### Trivy
-Scans container images and filesystems for vulnerabilities.
-```bash
-trivy image myapp:latest
-trivy fs .
-```
-
-### truffleHog
-Scans git history for secrets.
-```bash
-trufflehog git file://. --only-verified
-```
-
-## Files
-
-- `.gitleaks.toml` — gitleaks config with common allowlist patterns
-- `trivy.yaml` — Trivy config with severity thresholds
-- `github-actions-scan.yml` — CI workflow that runs all scanners on PR
+Scanner command syntax varies by version; check the installed tool's help. See the `secrets-management` skill for handling findings and the [shipped inventory](../../README.md).

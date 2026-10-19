@@ -31,6 +31,18 @@ Do NOT skip any of these:
    - Logs immediately before the failure
    - Any recent changes
 
+For multi-layer failures (CI → script → cloud API, proxy → service → pod), collect evidence at each boundary to find where the expected input/output first changes. Check whether a secret is present without printing its value, for example:
+
+```bash
+if [ -n "${DEPLOY_TOKEN:-}" ]; then
+  printf '%s\n' 'DEPLOY_TOKEN: present'
+else
+  printf '%s\n' 'DEPLOY_TOKEN: missing or empty'
+fi
+```
+
+Avoid raw `env` dumps, shell tracing around secrets, and secret-bearing command output. Ask for redacted logs in chat mode; presence checks do not prove a credential is valid.
+
 ## Phase 2 — Form Hypotheses
 
 List 2-3 specific, falsifiable hypotheses. Examples:
@@ -50,9 +62,11 @@ For each hypothesis:
 ## Phase 4 — Fix
 
 Only after you have confirmed the root cause:
+- Write the smallest regression check for the confirmed failure using `test-driven-development`; watch it fail for the expected reason
 - Fix the specific root cause, not the symptom
 - Explain what caused it and why the fix resolves it
 - Check if the same issue exists elsewhere
+- Use `verification-before-completion` to verify the fix and required project checks before declaring success; report unavailable live-environment checks
 
 ## Red Flags — STOP and Follow Process
 

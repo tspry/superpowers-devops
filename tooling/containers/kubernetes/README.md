@@ -1,15 +1,5 @@
-# Kubernetes Manifests
+# Kubernetes Manifest Guidance
 
-Base manifest templates for common K8s resources.
+No standalone manifest templates are shipped here. Use the `kubernetes` skill to author manifests against the actual cluster version, policy, workload and namespace, then validate selectors, ports and resource dependencies.
 
-## Available
-
-- `deployment.yaml` — Deployment with resource limits, liveness/readiness probes, non-root security context
-- `service.yaml` — ClusterIP and LoadBalancer service templates
-- `ingress.yaml` — Ingress with TLS (cert-manager annotation)
-- `hpa.yaml` — HorizontalPodAutoscaler template
-- `configmap.yaml` — ConfigMap template
-- `secret.yaml` — Secret template (reminder: don't commit real values)
-- `namespace.yaml` — Namespace with resource quotas
-
-Copy and substitute your app name, image, and port.
+A [Helm chart skeleton](../helm/README.md) is shipped separately. See the [full inventory](../../README.md).

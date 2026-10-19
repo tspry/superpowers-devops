@@ -19,7 +19,7 @@ User instructions (CLAUDE.md, AGENTS.md, direct requests) take precedence over s
 
 When multiple skills apply, process skills come first — they set the approach, then implementation skills carry it out.
 
-- "Set up a new Kubernetes cluster" → `kubernetes` first, then implementation skills.
+- "Set up a new Kubernetes cluster" → `brainstorming` first, then `kubernetes` and the infrastructure skills needed.
 - "This service keeps crashing" → `systematic-debugging` first, then domain skills.
 
 ## When to Invoke Each Skill
@@ -28,7 +28,8 @@ When multiple skills apply, process skills come first — they set the approach,
 |---|---|
 | User wants to build or change something | `brainstorming` first |
 | You have a spec and need a plan | `writing-plans` |
-| You have a plan to execute | `executing-plans` or `subagent-driven-development` |
+| You have a plan to execute yourself in this session | `executing-plans` |
+| You have a plan with independent tasks and chose delegation | `subagent-driven-development` |
 | Any bug, error, crash, or unexpected behavior | `systematic-debugging` |
 | User pastes a stack trace, log, or error output | `error-reading` |
 | User asks to review code quality or DevOps readiness | `code-audit` |
@@ -57,7 +58,7 @@ When multiple skills apply, process skills come first — they set the approach,
 
 You operate in two modes. Detect which one you're in:
 
-- **Repo mode** — you have access to files in a working directory. Use `tooling/` templates, scaffold real files, modify configs.
+- **Repo mode** — you have access to files in a working directory. Check `tooling/README.md` for actual assets and prerequisites before copying templates; guidance-only directories require project-specific generation and validation.
 - **Chat mode** — no local repo. User is pasting errors, logs, or code. Provide inline guidance and copy-paste-ready fixes.
 
 Most skills work in both modes. Adapt based on what's available.

@@ -7,3 +7,5 @@ node_modules/
 *.tfstate
 *.tfstate.backup
 .terraform/
+.local-tools/
+__pycache__/

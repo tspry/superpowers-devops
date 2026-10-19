@@ -20,11 +20,7 @@ spec:
         app.kubernetes.io/name: {{ include "my-app.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      {{- with .Values.serviceAccount.name }}
-      serviceAccountName: {{ . }}
-      {{- else }}
-      serviceAccountName: {{ include "my-app.fullname" . }}
-      {{- end }}
+      serviceAccountName: {{ include "my-app.serviceAccountName" . | quote }}
       automountServiceAccountToken: false
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}

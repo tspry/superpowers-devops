@@ -7,7 +7,7 @@ description: Use when working with Docker — building images, writing Dockerfil
 
 ## Mode Detection
 
-- **Repo mode** — templates in `tooling/containers/dockerfiles/`. Scaffold Dockerfiles.
+- **Repo mode** — inspect existing Dockerfiles and the runtime. `tooling/containers/dockerfiles/` contains guidance only; generate and validate the actual Dockerfile for this project.
 - **Chat mode** — user pastes configs, error logs, or `kubectl` output. Provide inline guidance.
 
 ## Docker
@@ -36,8 +36,8 @@ docker stats                         # live resource usage
 
 ## Kubernetes & Helm — use the `kubernetes` skill
 
-Kubernetes manifests, Helm charts, RBAC, NetworkPolicy, security hardening, and cluster debugging now live in the dedicated [`kubernetes`](skills/kubernetes/SKILL.md) skill. Invoke it for any K8s or Helm work.
+Kubernetes manifests, Helm charts, RBAC, NetworkPolicy, security hardening, and cluster debugging now live in the dedicated [`kubernetes`](../kubernetes/SKILL.md) skill. Invoke it for any K8s or Helm work.
 
 ## Tooling Templates
 
-- `tooling/containers/dockerfiles/` — base Dockerfiles by runtime
+- `tooling/containers/dockerfiles/` — guidance; no base Dockerfiles are bundled

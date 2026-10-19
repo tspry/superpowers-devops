@@ -4,58 +4,67 @@
 
 > **For kubernetes-skill, adapted from [KubeShark](https://github.com/LukasNiessen/kubernetes-skill)** by Lukas Niessen - a failure-mode-first, security-hardened Kubernetes agent skill.
 
-A unified DevOps intelligence layer for AI coding agents. Combines AI agent skills that guide you through DevOps workflows with real production-ready tooling templates - all in one plugin.
+A DevOps-focused skill plugin for AI coding agents, with infrastructure/debugging guidance and a small set of adaptable Helm and AWS examples. Templates require project-specific inputs and validation; they are not a production-readiness guarantee.
 
 ## What It Does
 
-Install once. Then just work. When you paste an error, a crash log, a Terraform plan, or a broken nginx config, the right skill kicks in automatically and guides you through diagnosis and resolution.
+Once skills are discovered and the entrypoint is loaded, the trigger table guides the agent toward the relevant workflow for errors, Terraform plans, Kubernetes manifests, or proxy configs. Activation depends on the host integration; verify your installation below.
 
 Works in two modes:
 - **Repo mode** - agent has access to your files, scaffolds from templates, modifies configs directly
 - **Chat mode** - no repo needed, paste errors/logs/code and get inline guidance and fix snippets
 
-## Supported Platforms
+## Platform Integrations
 
-- Claude Code
-- Cursor
-- Codex
-- OpenCode
-- GitHub Copilot CLI
-- Gemini CLI
+| Platform | Integration and current evidence |
+|---|---|
+| Claude Code | Marketplace packaging and session hook; hook output tested through Bash, not a native installation matrix |
+| Cursor | Native plugin skill paths and Cursor-specific hook schema; hook contract tested through Bash |
+| Codex | Native skill-directory install; explicit entrypoint load, no automatic session hook |
+| OpenCode | Native V1/V2 adapter contracts tested; host installation smoke check still required |
+| Gemini CLI | Extension manifest supplied; host installation not exercised here |
+| GitHub Copilot CLI | Manual skill/instruction use; automatic bootstrap is not verified |
+
+Pi and Kimi wiring is also present but remains experimental. Repository checks do not certify every host/OS combination.
 
 ## Installation
 
-### Option 1 - Via Plugin Marketplace (recommended)
+### Claude Code
 
-**Step 1:** Register the marketplace:
+#### Option 1 - Via Plugin Marketplace (recommended)
+
+Run these commands inside an interactive Claude Code session.
+
+**Step 1:** Register the marketplace repository:
 ```
 /plugin marketplace add tspry/superpowers-devops
 ```
 
 **Step 2:** Install the plugin:
 ```
-/plugin install superpowers-devops@superpowersdevops
+/plugin install superpowers-devops@superpowers-devops-marketplace
 ```
 
-### Option 2 - Via Git Clone
+The name after `@` comes from `.claude-plugin/marketplace.json`, not the GitHub repository name. Use `/plugin` to confirm the plugin appears under **Installed**.
 
-**Step 1:** Clone the repo:
+#### Option 2 - Via a Local Clone
+
+**Step 1:** Clone the repo in your terminal:
 ```bash
 git clone https://github.com/tspry/superpowers-devops
 ```
 
-**Step 2:** Install from local path:
+**Step 2:** In Claude Code, register the clone as a local marketplace. This relative path assumes your session is in the directory containing the clone; otherwise use its absolute path:
 ```
-/plugin install ./superpowers-devops
+/plugin marketplace add ./superpowers-devops
+/plugin install superpowers-devops@superpowers-devops-marketplace
 ```
+
+See the [Claude Code plugin installation documentation](https://code.claude.com/docs/en/discover-plugins) for installation scopes and activation instructions.
 
 ### Cursor
 
-Search for `superpowers-devops` in the plugin marketplace, or:
-
-```
-/add-plugin superpowers-devops
-```
+Use Cursor's plugin installation UI with this GitHub repository/local clone, following [Cursor's plugin documentation](https://cursor.com/docs/plugins). Marketplace publication is not guaranteed. The clone includes `.cursor-plugin/plugin.json`, skills, and a Cursor-specific `sessionStart` hook. Restart Cursor, confirm the plugin is enabled, and verify that `kubernetes` is available and the entrypoint context loads.
 
 ### Codex
 
@@ -69,13 +78,21 @@ Fetch and follow instructions from https://raw.githubusercontent.com/tspry/super
 Fetch and follow instructions from https://raw.githubusercontent.com/tspry/superpowers-devops/main/.opencode/INSTALL.md
 ```
 
+### Gemini CLI
+
+Install the extension using `gemini extensions install https://github.com/tspry/superpowers-devops` on a Gemini CLI release supporting Git extensions. Restart and check `gemini extensions list`, the loaded `GEMINI.md` context, and skill discovery. See [Gemini extension documentation](https://geminicli.com/docs/extensions/); this host flow has not been exercised in this repository's checks.
+
+### GitHub Copilot CLI
+
+Use a local clone and explicitly load/read `skills/using-superpowers-devops/SKILL.md` through your CLI's supported instruction/skill mechanism. Keep the clone's absolute path available when working in another project. No automatic Copilot hook installation is promised; verify skill loading before relying on the trigger table.
+
 ## Skills
 
 ### Workflow
-- `brainstorming` - refine requirements before touching anything
-- `writing-plans` - break work into reviewable tasks
-- `executing-plans` - run plans via subagents
-- `subagent-driven-development` - drive implementation through delegated subagents
+- `brainstorming` - establish intent and right-size design to scope and operational risk
+- `writing-plans` - record decisions, interfaces, verification, and rollback in reviewable tasks
+- `executing-plans` - implement plans inline with progress and verification evidence
+- `subagent-driven-development` - delegate tasks with spec/quality review and bounded fix loops
 - `dispatching-parallel-agents` - investigate independent problems in parallel
 - `test-driven-development` - write tests before implementation code
 - `requesting-code-review` - submit changes for peer review
@@ -110,33 +127,27 @@ Fetch and follow instructions from https://raw.githubusercontent.com/tspry/super
 |---|---|
 | `/brainstorm` | Start a guided design session |
 | `/write-plan` | Create an implementation plan |
-| `/execute-plan` | Execute a plan via subagents |
+| `/execute-plan` | Execute a plan inline with verification checkpoints |
 | `/audit` | Run a DevOps readiness + security audit |
 | `/debug` | Trigger systematic debugging |
 | `/optimize` | Analyze code for performance issues |
 | `/kubernetes` | Author, review, harden, or debug Kubernetes and Helm workloads |
+| `/test-driven-development` | Define and verify tests before implementation |
+| `/writing-skills` | Create or maintain skill instructions |
+
+These files are exposed as slash commands only on hosts that discover the plugin's `commands/` directory; native skill invocation is the portable alternative.
 
 ## Tooling
 
-Real templates and configs in `tooling/` organized by domain:
-
-```
-tooling/
-├── ci/           GitHub Actions, GitLab CI, Jenkins
-├── containers/   Dockerfiles, Kubernetes manifests, Helm charts
-├── iac/          Terraform, Ansible, Pulumi
-├── cloud/        AWS, GCP, Azure
-├── monitoring/   Prometheus, Grafana
-├── security/     Vault, SOPS, scanning
-└── network/      Nginx, Traefik, HAProxy
-```
-
-Each domain has generic templates plus opinionated `starters/` for common full-stack setups.
+See the [exact tooling inventory](tooling/README.md). Shipped assets are a Helm chart skeleton and four AWS examples. Other domain directories and starter READMEs are guidance, not bundled implementations. Skills can generate project-specific configurations for those domains; generated output needs its own verification.
 
 ## Verification
 
-- Run `bash tests/validate.sh` for a structural check (frontmatter, path references, conventions)
-- `.pre-commit-config.yaml` provides pre-commit hooks for basic validation before commits
+See [the verification guide](tests/README.md) for required structural, platform-contract, and template checks and their limits. No cloud deployment or host-installation certification is implied by local checks.
+
+## Upstream Sync
+
+Selected improvements are adapted from **obra/superpowers v7.0.0** and **LukasNiessen/kubernetes-skill**. See [the sync record and repeatable maintenance procedure](docs/upstream-sync.md) for exact revisions, adapted files, deliberate differences, and verification. Future syncs preserve DevOps as the main direction rather than importing all upstream features.
 
 ## License
 

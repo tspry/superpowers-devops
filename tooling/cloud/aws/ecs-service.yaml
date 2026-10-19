@@ -1,10 +1,28 @@
 ---
 # CloudFormation-compatible minimal ECS service + task definition
-# Substitute your account ID, region, and ECR repository.
+# Supply existing cluster, IAM roles, log group, security groups and private subnets.
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "ECS service and task definition for my-app"
 
 Parameters:
+  ClusterArn:
+    Type: String
+    Description: ARN of an existing ECS cluster in this region
+  ExecutionRoleArn:
+    Type: String
+    Description: Existing execution role with image-pull and CloudWatch Logs permissions
+  TaskRoleArn:
+    Type: String
+    Description: Existing least-privilege role used by the application
+  LogGroupName:
+    Type: String
+    Description: Existing CloudWatch Logs group in this region
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: Existing security groups permitting required application traffic
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Private subnets in the security groups' VPC, with NAT or VPC endpoints for image pulls and logs
   ServiceName:
     Type: String
     Default: my-app
@@ -12,7 +30,7 @@ Parameters:
   ContainerImage:
     Type: String
     Default: 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:v1.0.0
-    Description: ECR image URI (immutable tag)
+    Description: Existing image URI pinned by digest or registry-enforced immutable tag
   ContainerPort:
     Type: Number
     Default: 8080
@@ -35,8 +53,8 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Ref ServiceName
-      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
-      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${ServiceName}-task-role"
+      ExecutionRoleArn: !Ref ExecutionRoleArn
+      TaskRoleArn: !Ref TaskRoleArn
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
@@ -52,7 +70,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: !Sub "/ecs/${ServiceName}"
+              awslogs-group: !Ref LogGroupName
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
       Tags:
@@ -65,7 +83,7 @@ Resources:
     Type: AWS::ECS::Service
     Properties:
       ServiceName: !Ref ServiceName
-      Cluster: !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ServiceName}"
+      Cluster: !Ref ClusterArn
       TaskDefinition: !Ref TaskDefinition
       LaunchType: FARGATE
       DesiredCount: 2
@@ -74,11 +92,8 @@ Resources:
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
-          SecurityGroups:
-            - !Sub "sg-${ServiceName}-app"
-          Subnets:
-            - !Sub "subnet-${ServiceName}-private-a"
-            - !Sub "subnet-${ServiceName}-private-b"
+          SecurityGroups: !Ref SecurityGroupIds
+          Subnets: !Ref SubnetIds
       Tags:
         - Key: Name
           Value: !Ref ServiceName

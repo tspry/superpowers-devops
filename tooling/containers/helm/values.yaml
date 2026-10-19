@@ -4,11 +4,11 @@ replicaCount: 2
 # -- Container image configuration
 image:
   repository: ghcr.io/my-org/my-app
-  # -- Immutable tag – never use :latest
+  # -- Enforce registry tag immutability for the selected version; never use :latest
   tag: v1.0.0
   pullPolicy: IfNotPresent
 
-# -- Service account (dedicated per workload; do not use default)
+# -- Create a dedicated account, or set create=false and name to an existing account.
 serviceAccount:
   create: true
   name: ""

@@ -1,11 +1,5 @@
-# CI/CD Starters
+# CI/CD Starters — Not Shipped
 
-Opinionated, production-ready CI/CD setups for common stacks.
+No end-to-end application starters are bundled. Use the `ci-cd-pipeline` skill and the user's stack, registry, identity and deployment target to build a pipeline. Do not claim a local starter can be copied.
 
-## Available Starters
-
-- `node-app-aws/` — Node.js app → Docker → ECR → ECS on AWS
-- `python-app-gcp/` — Python app → Docker → GCR → Cloud Run on GCP
-- `static-site-cloudflare/` — Static site → build → Cloudflare Pages deploy
-
-Each starter includes the full pipeline: test → build → push → deploy.
+See the [shipped inventory](../../README.md).

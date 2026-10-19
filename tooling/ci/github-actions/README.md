@@ -1,12 +1,5 @@
-# GitHub Actions Templates
+# GitHub Actions Guidance
 
-Reusable workflow templates for common CI/CD patterns.
+No reusable workflow templates are shipped here. Use the `ci-cd-pipeline` skill to author a workflow against the project's actual test/build/deploy commands and permissions. These notes are not an application-deployment starter.
 
-## Templates
-
-- `node-test.yml` — Node.js test workflow
-- `docker-build-push.yml` — Build and push Docker image to registry
-- `deploy-k8s.yml` — Deploy to Kubernetes after image push
-- `terraform-plan-apply.yml` — Terraform plan on PR, apply on merge
-
-See `starters/` for full opinionated end-to-end setups.
+See the [shipped inventory](../../README.md).

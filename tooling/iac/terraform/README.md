@@ -1,32 +1,5 @@
-# Terraform Modules
+# Terraform Guidance
 
-Reusable Terraform modules organized by resource type.
+No Terraform modules are shipped here. Use the `infrastructure-provisioning` skill with the project's existing provider/version constraints, modules and state backend. For an external module, verify its source, pinned version, inputs and plan rather than inventing a local module path.
 
-## Structure
-
-```
-terraform/
-├── aws/
-│   ├── vpc/           VPC with public/private subnets
-│   ├── eks/           EKS cluster
-│   ├── ecs/           ECS cluster + service
-│   ├── rds/           RDS instance with parameter group
-│   └── s3/            S3 bucket with versioning + encryption
-├── gcp/
-│   ├── gke/           GKE cluster
-│   └── cloud-run/     Cloud Run service
-└── azure/
-    └── aks/           AKS cluster
-```
-
-## Usage
-
-```hcl
-module "vpc" {
-  source = "./aws/vpc"
-  name   = "my-vpc"
-  cidr   = "10.0.0.0/16"
-}
-```
-
-See each module's `variables.tf` for required inputs.
+See the [shipped inventory](../../README.md).

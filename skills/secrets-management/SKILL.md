@@ -18,31 +18,30 @@ SECRETS NEVER GO IN CODE, CONFIGS, OR GIT HISTORY
 
 ## Secret Scanning
 
+Confirm the repository and target environment. Keep values out of chat, logs, shell tracing, command arguments, and reports. Report location, secret type, and rotation status with redacted evidence; never reproduce a detected credential. Obtain authorization for writes, rotation, or history rewrites and plan recovery for consumers.
+
 ```bash
-# gitleaks — scan for leaked secrets
-gitleaks detect --source . --verbose
-
-# truffleHog — scan git history
-trufflehog git file://. --only-verified
-
-# Check git history for a specific pattern
-git log -p | grep -i "password\|secret\|api_key\|token"
+# gitleaks — redact matches, including history findings (current CLI)
+gitleaks git . --redact
 ```
+
+Check the installed scanner's CLI and redaction support first. Avoid raw `git log -p`, `env`, or unredacted scanner output when investigating credentials.
 
 **If you find a secret in git history:**
 1. Rotate the credential immediately — assume it's compromised
-2. Use `git filter-repo` to remove it from history
-3. Force-push (coordinate with team first)
-4. Add the pattern to `.gitleaks.toml` to prevent recurrence
+2. Identify affected consumers, rotate/revoke safely, and verify the replacement without printing it
+3. Propose a coordinated `git filter-repo` history rewrite only when needed and explicitly approved; account for forks, clones, and protected branches before any force-push
+4. Enable secret scanning and ignored local secret paths; custom scanner patterns supplement built-in detectors, not allowlist the leak
 
 ## SOPS (Secrets OPerationS)
 
 ```bash
-# Encrypt a file
+# Local plaintext input must be ignored, permission-restricted, and never logged
+umask 077
 sops --encrypt secrets.yaml > secrets.enc.yaml
 
-# Decrypt
-sops --decrypt secrets.enc.yaml
+# Decrypt to a protected, ignored file only when required, not stdout/chat
+sops --decrypt secrets.enc.yaml > .secrets.local.yaml
 
 # Edit encrypted file in-place
 sops secrets.enc.yaml
@@ -51,14 +50,14 @@ sops secrets.enc.yaml
 ## HashiCorp Vault
 
 ```bash
-# Authenticate
-vault login
+# Authenticate using the approved method without printing the resulting token
+vault login -no-print
 
-# Read a secret
-vault kv get secret/myapp/database
+# Inspect metadata without fetching secret values (KV v2 mount)
+vault kv metadata get secret/myapp/database
 
-# Write a secret
-vault kv put secret/myapp/database password=mysecret
+# Approved write from a permission-restricted, ignored JSON file; no values in argv
+vault kv put secret/myapp/database @/secure/path/database.json
 
 # List secrets
 vault kv list secret/myapp
@@ -67,18 +66,28 @@ vault kv list secret/myapp
 ## Kubernetes Secrets
 
 ```bash
-# Create a secret
-kubectl create secret generic db-secret \
-  --from-literal=password=mysecret
-
-# Use in a pod (env var)
-env:
-  - name: DB_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: db-secret
-        key: password
+# After context/namespace and change approval; input file is protected and ignored
+kubectl --context <context> -n <namespace> create secret generic db-secret \
+  --from-file=password=/secure/path/password
 ```
+
+Prefer an approved external secret integration and file mounts. Kubernetes Secret data is base64, not encryption; enforce RBAC and encryption at rest. A pod-spec fragment (merge `volumeMounts` into the real application container):
+
+```yaml
+volumes:
+  - name: database-secret
+    secret:
+      secretName: db-secret
+      defaultMode: 0440
+containers:
+  - name: app
+    volumeMounts:
+      - name: database-secret
+        mountPath: /run/secrets/database
+        readOnly: true
+```
+
+Set ownership/group permissions for the application's non-root UID; verify the mount is readable without printing its contents. Avoid `subPath` when live secret-volume updates are required. Environment injection is a documented compatibility exception for apps that cannot read files; it requires restart on rotation and must never be logged. Remove transient plaintext files according to local policy after use.
 
 ## Common Mistakes
 
@@ -91,6 +100,4 @@ env:
 
 ## Tooling Templates
 
-- `tooling/security/vault/` — Vault policies, auth configs
-- `tooling/security/sops/` — .sops.yaml templates
-- `tooling/security/scanning/` — gitleaks, truffleHog configs
+- `tooling/security/scanning/` — guidance only. Vault policies, SOPS configs, and scanner configs are not bundled.

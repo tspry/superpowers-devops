@@ -7,7 +7,7 @@ description: Use when designing, debugging, or fixing CI/CD pipelines — GitHub
 
 ## Mode Detection
 
-- **Repo mode** — templates in `tooling/ci/`. Scaffold or modify pipeline configs.
+- **Repo mode** — read existing pipeline configs and scaffold for the detected platform. Check `tooling/README.md`; CI directories currently contain guidance, not bundled workflows.
 - **Chat mode** — user pastes pipeline config or failure logs. Diagnose and provide corrected config.
 
 ## Pipeline Design Principles
@@ -78,7 +78,4 @@ env:
 
 ## Tooling Templates
 
-- `tooling/ci/github-actions/` — reusable workflow templates
-- `tooling/ci/gitlab-ci/` — .gitlab-ci.yml templates
-- `tooling/ci/jenkins/` — Jenkinsfile templates
-- `tooling/ci/starters/` — full CI/CD setups by stack
+- `tooling/ci/github-actions/` and `tooling/ci/starters/` — guidance only. Generate and validate workflows for the user's stack; GitLab CI and Jenkins templates are not bundled.

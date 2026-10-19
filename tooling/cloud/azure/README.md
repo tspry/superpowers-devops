@@ -1,10 +1,5 @@
-# Azure Cloud Templates
+# Azure Guidance
 
-Base configs and policies for common Azure resources.
+No Azure templates are shipped here. Use the `cloud-operations` skill with the confirmed subscription, tenant, resource group and identity. Review the generated configuration and planned changes before an authorized deployment.
 
-## Available
-
-- `aks-cluster.yaml` — AKS cluster template (managed identity, network policy)
-- `app-service.yaml` — App Service plan + app template
-
-Copy and substitute your resource group and region.
+See the [shipped inventory](../../README.md).

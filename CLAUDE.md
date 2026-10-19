@@ -13,9 +13,9 @@ The skill will orient you to the full DevOps skill set and tell you when to invo
 A plugin that provides a unified DevOps intelligence layer for AI coding agents. It has two deeply integrated halves:
 
 1. **Skills** (`skills/`) — SKILL.md files that shape agent behavior for specific DevOps workflows
-2. **Tooling** (`tooling/`) — Production-ready templates and configs that skills reference by path
+2. **Tooling** (`tooling/`) — Adaptable Helm/AWS examples; `tooling/README.md` is the exact inventory
 
-Skills know where their relevant tooling templates live. In repo mode, agents scaffold real files from `tooling/`. In chat mode (no local repo), agents provide inline guidance from pasted content.
+In repo mode, inspect the inventory before using a template; other domains are guidance only and require project-specific generation and validation. In chat mode, provide inline guidance from supplied content.
 
 ## Architecture
 
@@ -30,17 +30,17 @@ Skill categories:
 
 ### Tooling
 
-`tooling/` is organized by domain. Each domain has generic templates at its root and opinionated full setups in `starters/`:
+`tooling/` is organized by domain. Only Helm and AWS currently contain executable examples; the other directories and `starters/` READMEs contain guidance:
 
 ```
 tooling/
-├── ci/           # GitHub Actions, GitLab CI, Jenkins
-├── containers/   # Dockerfiles, Kubernetes manifests, Helm charts
-├── iac/          # Terraform, Ansible, Pulumi
-├── cloud/        # AWS, GCP, Azure configs
-├── monitoring/   # Prometheus, Grafana
-├── security/     # Vault, SOPS, scanning (Trivy, gitleaks)
-└── network/      # Nginx, Traefik, HAProxy
+├── ci/           # Guidance only
+├── containers/   # Helm skeleton; Docker/raw Kubernetes guidance only
+├── iac/          # Guidance only
+├── cloud/        # AWS examples; GCP/Azure guidance only
+├── monitoring/   # Guidance only
+├── security/     # Scanning guidance only
+└── network/      # Nginx guidance only
 ```
 
 ### Slash Commands
@@ -55,6 +55,9 @@ Commands in `commands/` map directly to skills:
 | `/audit` | `code-audit` |
 | `/debug` | `systematic-debugging` |
 | `/optimize` | `code-optimization` |
+| `/kubernetes` | `kubernetes` |
+| `/test-driven-development` | `test-driven-development` |
+| `/writing-skills` | `writing-skills` |
 
 ### Platform Integration Files
 
@@ -66,17 +69,20 @@ Commands in `commands/` map directly to skills:
 | `.opencode/INSTALL.md` | Manual bootstrap for OpenCode |
 | `gemini-extension.json` | Gemini CLI extension config |
 | `hooks/hooks.json` | Claude Code session-start hook |
+| `hooks/hooks-cursor.json` | Cursor-specific sessionStart hook schema |
 | `hooks/session-start` | Hook script that runs at session start |
 | `GEMINI.md` | Equivalent of this file for Gemini CLI |
 
 ## Design Principles
 
-- **Zero external dependencies** — no npm/pip/gem dependencies
+- **No new package dependencies** — small checks use stdlib/native tools; `.opencode/` has its existing SDK dependency
 - **Dual-mode** — every skill works with or without a local repo
 - **Skills reference real tooling** — DevOps skills specify exact `tooling/` paths
-- **Generic + opinionated** — generic templates for flexibility, `starters/` for speed
+- **Honest inventory** — do not claim missing templates or starters are bundled
 
 ## Verification
 
 - Run `bash tests/validate.sh` for a structural check (frontmatter, path references, conventions)
+- Run applicable contract/template checks in `tests/README.md`; local checks do not certify host installs or cloud deployments
 - `.pre-commit-config.yaml` provides pre-commit hooks for basic validation before commits
+- Follow `docs/upstream-sync.md` when reviewing either upstream; record exact revisions, selective adaptations, evidence, and deferred work

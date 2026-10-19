@@ -13,6 +13,8 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **This applies to all DevOps artifacts:** Terraform modules, Kubernetes manifests, CI pipeline configs, shell scripts, Ansible playbooks, and monitoring rules.
 
+**When writing or changing tests, read [Writing Good DevOps Tests](writing-good-tests.md).** A test must be able to fail for the behavior it claims to protect; lint, schema validation, and runner dry-runs are useful layers, not proof of runtime behavior. For documentation-only changes, follow the project's content verification rather than inventing behavioral tests for prose.
+
 **Violating the letter of the rules is violating the spirit of the rules.**
 
 ## When to Use
@@ -81,6 +83,8 @@ Write one minimal test showing what should happen.
 # tests/instance_test.tftest.hcl
 
 run "create_instance_uses_correct_ami" {
+  command = plan
+
   assert {
     condition     = aws_instance.app.ami == "ami-0c55b159cbfafe1f0"
     error_message = "Expected production AMI, got ${aws_instance.app.ami}"
@@ -93,6 +97,8 @@ run "create_instance_uses_correct_ami" {
 # Validate manifest against cluster API before applying
 kubectl apply --dry-run=server -f manifests/deployment.yaml
 ```
+
+This proves API/admission acceptance, not that selectors route traffic or the app becomes ready. Add a policy assertion or isolated integration check for the actual requirement. Confirm the cluster context before even a server dry-run.
 
 **For shell scripts:**
 ```bash
@@ -119,7 +125,7 @@ jobs:
 **Requirements:**
 - One behavior per test
 - Clear name describing the expected outcome
-- Test against real behavior (schema validation, dry-run, plan output), not mocks
+- Assert required behavior or policy using parsed config/plan output or an isolated runtime; distinguish those claims from syntax/schema validation
 
 ### Verify RED — Watch It Fail
 
@@ -138,6 +144,8 @@ bats tests/healthcheck.bats
 # CI config validation
 act --job validate --dryrun
 ```
+
+`act --dryrun` checks runner planning only. Run the validation job itself in an appropriate isolated environment to establish its assertions. Use only project-approved tooling; do not add a test framework when an existing check or standard-library assertion covers the behavior.
 
 Confirm:
 - Test fails (not errors)
@@ -205,7 +213,9 @@ Confirm:
 
 **Test fails?** Fix config/code, not the test.
 
-**Other existing tests fail?** Fix the gap now.
+**Other existing tests fail?** Investigate and report them, including pre-existing failures. Do not silently skip them or expand into unrelated fixes without agreement.
+
+Before calling the task done or reporting it ready, run the project's full required verification, not just the new targeted check. Avoid live applies as test shortcuts; record checks requiring unavailable credentials/environment access as unverified.
 
 ### REFACTOR — Clean Up
 
@@ -238,40 +248,13 @@ Next failing test for next feature or validation.
 | **CI/CD** | `yamllint` / `pre-commit` | Config file validation |
 | **Monitoring** | `promtool check rules` | Validate Prometheus rules and alerts |
 
-## Why Order Matters for DevOps
-
-**"I'll write IaC tests after to verify it works"**
-
-Tests written after pass immediately. Passing immediately proves nothing:
-- The test might validate what you built, not what you should have built
-- The test might use the same assumptions that caused the problem
-- You never saw it catch the failure mode
-
-**"terraform plan already shows me what changed"**
-
-`terraform plan` shows drift, not correctness. It tells you a resource will be created. It doesn't tell you if the resource has the right configuration. A TDD test validates intent — not just change.
-
-**"I already validated the manifest manually"**
-
-Manual validation is ad-hoc. You checked one environment once. Automated tests check every environment every time. `kubectl apply --dry-run=server` takes 2 seconds and catches API version mismatches, missing fields, and RBAC gaps.
-
-**"Deleting a configured module is wasteful"**
-
-Sunk cost fallacy. The time is gone. Your choice now:
-- Delete and rewrite with TDD (X more hours, high confidence)
-- Keep it and patch validation after (30 min, low confidence, likely gaps)
-
-**"IaC doesn't need unit tests — it's just config"**
-
-Config IS code. A missing IAM policy, a wrong security group rule, a typo in a domain name — all cause production incidents. TDD catches these at test time, not incident time.
-
 ## Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|
 | "Too simple to test" | One-line configs cause outages. Test takes 10 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "terraform plan is my test" | Plan shows drift, not correctness. |
+| "I'll test after" | Immediate passes may encode the implementation's assumptions; watching the intended failure demonstrates fault detection. |
+| "terraform plan is my test" | Plan shows proposed change; assertions against requirements establish intent. |
 | "Already manually validated" | Manual ≠ systematic. No re-runnable record. |
 | "Deleting a configured module is wasteful" | Sunk cost fallacy. Keeping unverified config is tech debt. |
 | "Keep as reference, write tests" | You'll adapt it. That's testing after. Delete means delete. |
@@ -279,6 +262,7 @@ Config IS code. A missing IAM policy, a wrong security group rule, a typo in a d
 | "Test hard = module design unclear" | Listen to the test. Hard to test = hard to use. |
 | "TDD will slow down IaC development" | TDD prevents incident response. Downstream time saved. |
 | "kubectl apply already validates" | Only API schema. Not logic, policies, or intent. |
+| "IaC is just config" | A wrong IAM policy, selector, or DNS value changes production behavior. Test that requirement. |
 | "Existing infrastructure has no tests" | You're improving it. Write tests before changes. |
 
 ## DevOps-Specific Red Flags — STOP and Start Over
@@ -306,13 +290,13 @@ Before marking work complete:
 - [ ] Watched each test fail before implementing
 - [ ] Each test failed for expected reason (validation missing, not setup error)
 - [ ] Wrote minimal config to pass each test
-- [ ] All tests pass
-- [ ] Output pristine (no errors, warnings)
-- [ ] Tests use real validation (terraform plan, dry-run, schema check) — not custom mocks
+- [ ] Full project-required verification ran; all failures, including pre-existing ones, are reported
+- [ ] Change-related failures fixed; remaining errors, warnings, and unavailable checks explicitly accounted for rather than claimed green
+- [ ] Tests assert behavior/policy; syntax/schema/dry-run evidence is identified separately
 - [ ] Edge cases and failure modes covered
 - [ ] Rollback validated (undo plan passes)
 
-Can't check all boxes? You skipped TDD. Start over.
+Missing a test cycle for changed behavior? Complete it before claiming TDD. Blocked on environment access or an existing failure? Report the blocker and obtain a disposition; do not rerun destructive actions or claim an unverified check passed.
 
 ## When Stuck
 
@@ -321,7 +305,7 @@ Can't check all boxes? You skipped TDD. Start over.
 | Don't know how to test an IaC module | Write the `terraform { assert { ... } }` block first. Ask your human partner. |
 | Terraform test too complex | Module design too complex. Simplify variables, split resources. |
 | Kubernetes validation setup huge | Use `kubeconform` offline. Still complex? Simplify the manifest. |
-| Must mock cloud provider | If you need to mock, you're over-testing. Test the config shape, not cloud behavior. |
+| Must mock cloud provider | Mock only the boundary when needed; assert evaluated config/plan and do not claim real cloud behavior. |
 | Shell script testing hard | Extract logic into small functions. Test each function with BATS. |
 
 ## Debugging Integration

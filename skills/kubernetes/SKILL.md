@@ -7,20 +7,20 @@ description: Use when working with Kubernetes or Helm — authoring, reviewing, 
 
 LLMs hallucinate constantly with Kubernetes: missing security contexts, deprecated `apiVersion`s, wildcard RBAC, forgotten resource limits, and probes that cause cascading failures. This skill forces a **failure-mode-first workflow** so you diagnose before you generate, default to secure and reliable manifests, and validate before you finalize.
 
-Adapted from the KubeShark approach (failure-mode workflow + security defaults + good/bad examples), tuned for this plugin's dual-mode operation.
+Adapted from [KubeShark](https://github.com/LukasNiessen/kubernetes-skill) (failure-mode workflow + security defaults + good/bad examples), tuned for this plugin's dual-mode operation. Reviewed revision and intentional differences are recorded in [the upstream log](../../docs/upstream-sync.md).
 
 ## Mode Detection
 
-- **Repo mode** — templates in `tooling/containers/kubernetes/` and `tooling/containers/helm/`. Scaffold real manifests, Helm charts, Kustomize overlays, RBAC, and policies.
+- **Repo mode** — inspect the project's manifests and `tooling/README.md`. Only a Helm skeleton is bundled; raw manifests, Kustomize overlays, RBAC, and policies must be generated and validated for the target cluster.
 - **Chat mode** — user pastes manifests, `kubectl` output, or error logs. Provide inline guidance and copy-paste-ready fixes.
 
 ## The Failure-Mode Workflow
 
 Run this top to bottom for every Kubernetes task:
 
-1. **Capture execution context** — cluster version/distribution, namespace, environment criticality, workload type, deployment method (raw YAML / Helm / Kustomize), and policy enforcement (PSA / Kyverno / OPA). If unknown, state assumptions explicitly.
+1. **Capture execution context** — cluster version/distribution, explicit kubectl context, namespace, environment criticality, workload type, deployment method (raw YAML / Helm / Kustomize), policy enforcement (PSA / Kyverno / OPA), cloud/CNI, and installed ingress/Gateway, CSI, GitOps, and observability controllers. If unknown, state assumptions explicitly.
 2. **Diagnose likely failure mode(s)** — pick from the six core failure modes below based on intent and risk.
-3. **Load relevant guidance** — apply the matching failure-mode guidance plus the security defaults and do/don't checklist. Pull platform-specific detail (EKS/GKE/AKS/OpenShift, GitOps, observability) only when that signal is present.
+3. **Load relevant guidance** — apply the matching failure-mode guidance plus the security defaults and do/don't checklist. Read [platform-patterns.md](platform-patterns.md) only when EKS, GKE, AKS, OpenShift, GitOps, or an observability operator is detected; use only the matching section. Confirm installed controller/CRD versions before generating their resources.
 4. **Propose the fix path with controls** — for each change, state why it addresses the failure mode, what could still go wrong at deploy/runtime, and the guardrails (validation commands, policy checks, rollback path).
 5. **Generate the artifacts** — manifests, Helm values/templates, Kustomize overlays, NetworkPolicies, RBAC, PDBs, policy rules.
 6. **Validate before finalize** — `kubectl apply --dry-run=server` or `kubectl diff`; `kubeconform` schema validation; cross-resource consistency (label/selector/port alignment); policy scan. **Never recommend a direct production apply without a reviewed diff and approval.**
@@ -41,7 +41,7 @@ Run this top to bottom for every Kubernetes task:
 
 Default to the Pod Security Standards **restricted** profile unless the user explicitly requests otherwise with justification. Apply these to every workload:
 
-- `runAsNonRoot: true` with explicit `runAsUser`/`runAsGroup`/`fsGroup` (non-zero, e.g. `65534`) at pod level
+- `runAsNonRoot: true`; use a verified image-compatible non-zero UID/GID and writable-volume permissions. On OpenShift, respect namespace/SCC-assigned IDs instead of hardcoding a UID
 - `allowPrivilegeEscalation: false` on every container (including init containers)
 - `capabilities.drop: ["ALL"]` on every container — add back only specific caps if justified
 - `seccompProfile.type: RuntimeDefault` at pod level
@@ -51,17 +51,19 @@ Default to the Pod Security Standards **restricted** profile unless the user exp
 - Dedicated ServiceAccount per workload — never the `default` SA
 - Namespace-scoped `Role` + `RoleBinding`, explicit verbs only, no `*` wildcards, no `cluster-admin` for workloads
 - Default-deny `NetworkPolicy` in every namespace; allow only what is needed, always include DNS egress
-- Secrets never in ConfigMaps or env vars; mount as files; prefer ExternalSecrets/Sealed Secrets
-- Immutable image tags (`v1.2.3`) or digests (`@sha256:...`) — never `:latest`
+- Secrets never in ConfigMaps or source control; prefer file mounts and an approved secret controller. Environment injection is an explicit application-compatibility exception, with restart-on-rotation and no logging
+- Image digests (`@sha256:...`) or registry-enforced immutable version tags — a version-looking tag alone is still mutable; never `:latest`
 - Workloads never in `default`, `kube-system`, or `kube-public`; label every namespace `pod-security.kubernetes.io/enforce: restricted`
 
-**Init-container deviation path:** document the reason, set `runAsNonRoot: false` + `runAsUser: 0`, add only the specific capability needed (e.g. `CHOWN`), keep `allowPrivilegeEscalation: false` and `readOnlyRootFilesystem: true`.
+**Init-container deviation path:** first try image ownership fixes or supported `fsGroup` handling. A root init container or added `CHOWN` capability violates restricted admission; it is not an in-profile workaround. Require an approved, narrowly scoped policy/SCC exception and document the impact before proposing it. Never silently weaken namespace policy or default SCCs.
+
+NetworkPolicy requires a CNI/policy engine that enforces it. Verify DNS (including NodeLocal DNS), metadata-server/workload-identity, and application egress before enabling default-deny. A policy accepted by the API is not proof of isolation.
 
 ## Do / Don't Checklist
 
 - DO set `runAsNonRoot`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`, `capabilities.drop: ["ALL"]`, `seccompProfile: RuntimeDefault` on every workload.
 - DO set `requests` (CPU + memory) and `limits.memory` on every container; leave CPU limits unset or generous to avoid CFS throttling.
-- DO set a readiness probe on every serving container and a liveness probe that checks **only the process's own health** (never external deps).
+- DO set readiness on serving containers. Use liveness only for recoverable process failures, never external dependencies; add a startup probe for slow initialization so startup does not cause restart loops.
 - DO use `networking.k8s.io/v1` for Ingress/NetworkPolicy and `ingressClassName` (not the deprecated `kubernetes.io/ingress.class` annotation).
 - DO use namespace-scoped RBAC with explicit verbs/resources; set `automountServiceAccountToken: false` on API-unaware pods.
 - DO verify label/selector/port chains line up across Deployment → Service → Ingress.
@@ -76,8 +78,22 @@ Default to the Pod Security Standards **restricted** profile unless the user exp
 
 ### 1. Deployment securityContext
 
-**GOOD** — full pod + container security context, immutable image, probes, resources:
+**GOOD** — full pod + container security context, versioned image placeholder, probes, resources:
 ```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-app
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-server
+  namespace: my-app
+automountServiceAccountToken: false
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -96,6 +112,7 @@ spec:
       labels:
         app.kubernetes.io/name: api-server
     spec:
+      serviceAccountName: api-server
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
@@ -132,7 +149,22 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-server
+  namespace: my-app
+spec:
+  selector:
+    app.kubernetes.io/name: api-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
 ```
+
+The image, UID, and health endpoints are application-specific placeholders, not a runnable application. Pin the approved image digest (or enforce registry tag immutability), confirm UID/endpoints, and supply reviewed namespace network policies before deployment. The namespace policy is appropriate for a new owned namespace, not an instruction to relabel an existing shared one.
 **BAD** — no security context, no resources, no probes, `:latest` tag, no namespace:
 ```yaml
 apiVersion: apps/v1
@@ -155,7 +187,7 @@ spec:
           ports:
             - containerPort: 8080
 ```
-**Why it fails:** runs as root with all capabilities, no resource bounds (BestEffort QoS, first to be evicted), no probes (health undetectable), mutable `:latest` (breaks rollback), and no namespace (deploy location undefined).
+**Why it fails:** permits image-default root and runtime-default capabilities, has no resource requests/limits (BestEffort QoS), no readiness signal, mutable `:latest` (breaks reproducible rollback), and no explicit namespace.
 
 ### 2. Probes — liveness must not depend on external services
 
@@ -193,6 +225,7 @@ kind: ServiceAccount
 metadata:
   name: ci-deployer
   namespace: my-app
+automountServiceAccountToken: false
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -204,7 +237,7 @@ rules:
     resources: ["deployments"]
     verbs: ["get", "list", "watch", "patch", "update"]
   - apiGroups: [""]
-    resources: ["configmaps", "secrets"]
+    resources: ["configmaps"]
     verbs: ["get", "list", "create", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -237,6 +270,8 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 **Why it fails:** `cluster-admin` grants unrestricted access to every resource in every namespace. A compromised pod owns the entire cluster, and the `default` SA is shared by every pod in the namespace.
+
+The GOOD role is an illustrative deployer subset, not a full chart installer. Secret access is deliberately absent; request it only for a justified, scoped responsibility. Workloads using API/cloud identity need an approved projected-token/identity flow rather than permanent token Secrets.
 
 ### 4. NetworkPolicy — default-deny + explicit allow with DNS egress
 
@@ -275,7 +310,9 @@ spec:
           port: 8080
   egress:
     - to:
-        - namespaceSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
           podSelector:
             matchLabels:
               k8s-app: kube-dns
@@ -300,16 +337,17 @@ spec:
       targetPort: 8080
       nodePort: 30080
 ```
-**Why it fails:** Kubernetes has flat networking by default — without a NetworkPolicy every pod can reach every other pod. `NodePort` exposes the service on every node without TLS. A selector that doesn't match pod labels causes a silent zero-endpoint failure.
+**Why it fails:** namespace boundaries alone do not isolate network traffic. NodePort creates node-level exposure whose reachability depends on routing/firewalls; TLS is not supplied by this Service. A mismatched selector produces no matching endpoints. The GOOD policy assumes CoreDNS labels in kube-system; verify the cluster's DNS/NodeLocal DNS and required dependency egress instead of copying it unchanged.
 
 ### 5. Image tags and apiVersion correctness
 
-**GOOD** — immutable tag + current `apiVersion`:
+**GOOD** — current Ingress API and backend matching the Service above (image pinning belongs in the workload):
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ingress
+  namespace: my-app
 spec:
   ingressClassName: nginx
   tls:
@@ -325,7 +363,7 @@ spec:
               service:
                 name: api-server
                 port:
-                  number: 8080
+                  number: 80
 ```
 **BAD** — removed `apiVersion` + deprecated annotation + old backend syntax:
 ```yaml
@@ -353,19 +391,25 @@ spec:
 Before finalizing any output, validate according to deployment method and risk:
 
 **Schema validation**
+
+Use the actual target version, not a hardcoded historical floor. Example shell variables below must come from the agreed execution context. Client dry-run can still use API discovery; it is not a guaranteed offline validator. Use cached/pinned schemas with kubeconform for offline checks and report missing CRD schemas as unvalidated, never silently skipped.
+
 ```bash
-kubectl apply --dry-run=server -f manifest.yaml          # catches CRDs, webhooks, unknown fields
-kubectl apply --dry-run=client -f manifest.yaml          # no cluster needed
-kubeconform -strict -kubernetes-version 1.30.0 manifest.yaml
-helm template my-release ./chart | kubeconform -kubernetes-version 1.30.0 -strict
-kustomize build overlays/production | kubeconform -kubernetes-version 1.30.0 -strict
+kubectl --context "$CONTEXT" -n "$NAMESPACE" apply --dry-run=server -f manifest.yaml
+kubectl --context "$CONTEXT" -n "$NAMESPACE" diff -f manifest.yaml
+kubeconform -strict -summary -kubernetes-version "$KUBERNETES_VERSION" manifest.yaml
+set -o pipefail  # preserve rendering failures in validation pipelines
+helm template my-release ./chart | kubeconform -kubernetes-version "$KUBERNETES_VERSION" -strict
+kustomize build overlays/production | kubeconform -kubernetes-version "$KUBERNETES_VERSION" -strict
 ```
 
+`kubectl diff` exits 1 for differences, 0 for none, and >1 for errors. Review differences rather than treating every nonzero exit as a validation failure. Dry-run/admission checks do not prove scheduling, routing, storage attachment, or application health.
+
 **Cross-resource consistency**
-- Service `spec.selector` must exactly match pod template `metadata.labels` — confirm with `kubectl get endpoints <svc>` (non-zero endpoints).
-- Port chain: Service `port` → `targetPort` → container `containerPort` must align.
+- Every Service selector entry must match the intended pod labels (pods may have extra labels). Verify ready EndpointSlices, not just accepted YAML.
+- Port chain: Ingress Service port → Service `port` → `targetPort` → actual application listener must align; named target ports must resolve on selected pods.
 - Ingress backend service name/port must match an existing Service.
-- HPA `minReplicas` must be >= PDB `minAvailable`.
+- Evaluate PDB rounding, healthy replicas, HPA minimum, and rollout surge/unavailability together. `minAvailable == minReplicas` can block voluntary eviction at minimum scale; a PDB does not protect against every outage or control Deployment rolling updates.
 - In a NetworkPolicy `from` entry, `namespaceSelector` + `podSelector` = AND; separate entries = OR.
 
 **Policy scan**
@@ -376,19 +420,20 @@ pluto detect-files -d manifests/    # deprecated/removed apiVersions
 
 **Runtime verification (post-apply)**
 ```bash
-kubectl rollout status deployment/my-app -n my-app
-kubectl get endpoints my-app -n my-app
-kubectl get pod <pod> -n my-app -o jsonpath='{.status.qosClass}'
-kubectl auth can-i --list --as=system:serviceaccount:my-app:my-sa -n my-app
+kubectl --context "$CONTEXT" -n my-app rollout status deployment/api-server
+kubectl --context "$CONTEXT" -n my-app get endpointslices -l kubernetes.io/service-name=api-server
+kubectl --context "$CONTEXT" -n my-app get pod <pod> -o jsonpath='{.status.qosClass}'
+kubectl --context "$CONTEXT" -n my-app auth can-i --list --as=system:serviceaccount:my-app:ci-deployer
 ```
+
+Use the confirmed context for every runtime command. Test allowed and denied network paths and least-privilege access. For GitOps-managed resources, recover through the owning repository/controller; `rollout undo` is not a durable GitOps rollback and cannot reverse data migrations or PVC changes.
 
 **Hard rule:** never recommend a direct production apply without a reviewed diff and approval. Always `kubectl diff` or `--dry-run=server` first, and always provide a rollback path (`kubectl rollout undo`, revision history, data-safety notes).
 
 ## Tooling Templates
 
-- `tooling/containers/kubernetes/` — Deployment, Service, Ingress, NetworkPolicy, RBAC manifests
-- `tooling/containers/helm/` — Helm chart templates and values
-- `tooling/containers/dockerfiles/` — base images (see `container-operations` for Docker)
+- `tooling/containers/helm/` — Helm skeleton; read its prerequisites and validation instructions
+- `tooling/containers/kubernetes/` and `tooling/containers/dockerfiles/` — guidance only, no raw manifests or base images bundled
 
 ## Red Flags (you are rationalizing — stop)
 
