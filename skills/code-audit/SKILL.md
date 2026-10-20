@@ -27,23 +27,24 @@ Run through each category. Report findings as: **CRITICAL**, **WARNING**, or **I
 - [ ] Running containers as root when not needed
 - [ ] World-readable file permissions on sensitive configs
 
-### 2. Container Readiness
+### 2. Container Readiness — when a container image is shipped
 
-- [ ] Dockerfile present
-- [ ] `.dockerignore` present (prevents leaking local files into image)
-- [ ] Base image pinned to a specific version (not `latest`)
-- [ ] Multi-stage build used to minimize final image size
-- [ ] Health check defined (`HEALTHCHECK` in Dockerfile or K8s `livenessProbe`)
-- [ ] Non-root user defined in Dockerfile
+- [ ] Dockerfile and `.dockerignore` match the actual build context
+- [ ] Base image is pinned according to the project's update policy; production does not rely on `latest`
+- [ ] Build tools and development dependencies are absent from the runtime image; use multi-stage builds when that is the simplest way to achieve this
+- [ ] PID 1 forwards termination signals and reaps children; multiple worker processes are not automatically a defect
+- [ ] Runtime user and filesystem permissions match workload requirements; avoid root when it is not required
+- [ ] Health checks exist only where the runtime or orchestrator consumes them, and test behavior the process can recover from
 
-### 3. Kubernetes / Orchestration
+### 3. Kubernetes / Orchestration — when workloads are deployed there
 
-- [ ] Resource `requests` and `limits` set for CPU and memory
-- [ ] `livenessProbe` and `readinessProbe` defined
-- [ ] `replicas` > 1 for production workloads
-- [ ] Namespace defined (not running in `default`)
-- [ ] Secrets stored in K8s Secrets, not ConfigMaps
-- [ ] `imagePullPolicy: Always` for mutable tags
+- [ ] Workload kind and scaling model match the role: serving Deployment, singleton, worker, StatefulSet, Job, or CronJob
+- [ ] Resource requests are based on scheduling needs; memory limits and any CPU limits reflect measured workload/platform policy rather than a universal default
+- [ ] Serving containers have readiness probes; liveness is limited to recoverable process failures and startup probes protect slow initialization
+- [ ] Availability and replica findings apply only to long-running workloads that can run concurrently; do not require `replicas > 1` for Jobs, CronJobs, or intentional singletons
+- [ ] Namespace, service account, RBAC, selectors, ports, and controller ownership are explicit where applicable
+- [ ] Kubernetes Secrets are only base64-encoded API objects; verify encryption at rest, access controls, delivery, and external secret management requirements
+- [ ] Images use immutable digests or registry-enforced immutable tags. `imagePullPolicy: Always` does not make a mutable tag immutable
 
 ### 4. CI/CD
 

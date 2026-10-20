@@ -41,6 +41,8 @@ server {
 }
 ```
 
+The timeout and retry values above are examples, not universal defaults. Align connect, queue, application, dependency, and response-read deadlines to an explicit end-to-end latency budget. Before increasing a timeout or retrying non-idempotent requests, identify the failed phase and evaluate extra concurrency, duplicate side effects, retry amplification, and rollback.
+
 ## Health Checks
 
 **Passive (Nginx default):** marks upstream as failed after N consecutive errors.
@@ -82,6 +84,6 @@ curl -v http://10.0.0.2:3000/health
 | Symptom | Cause | Fix |
 |---|---|---|
 | All traffic to one upstream | Sticky sessions / IP hash | Check algorithm config |
-| Upstream marked down incorrectly | Health check too aggressive | Increase `fail_timeout`, check health endpoint |
-| 502 during deploy | Old connections to stopped pod | Use `proxy_next_upstream` to retry |
+| Upstream marked down incorrectly | Health evidence or thresholds do not match failure behavior | Compare probe results with request traces before changing `fail_timeout` |
+| 502 during deploy | Connection lifecycle, readiness, or termination sequencing | Verify drain/readiness behavior; retry only eligible idempotent requests within a bounded budget |
 | Uneven distribution | Weight mismatch or keepalive skewing | Review weights and keepalive settings |

@@ -29,13 +29,12 @@ containerSecurityContext:
   capabilities:
     drop: ["ALL"]
 
-# -- Resource requests and limits
+# -- Generic baseline: CPU/memory requests and a memory limit. Add a CPU limit only when workload measurements and platform policy require it.
 resources:
   requests:
     cpu: 100m
     memory: 128Mi
   limits:
-    cpu: 500m
     memory: 256Mi
 
 # -- Service configuration
@@ -45,21 +44,13 @@ service:
   targetPort: 8080
   protocol: TCP
 
-# -- Ingress configuration
+# -- Ingress is disabled until the target controller, DNS, TLS secret, and certificate owner are confirmed.
 ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-  hosts:
-    - host: app.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: app-tls-cert
-      hosts:
-        - app.example.com
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
 
 # -- Probes
 livenessProbe:

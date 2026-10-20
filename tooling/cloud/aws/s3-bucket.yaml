@@ -1,14 +1,10 @@
 ---
 # S3 bucket with versioning and default encryption (SSE-S3)
-# Substitute your bucket name and region.
+# CloudFormation generates the globally unique physical bucket name.
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "S3 bucket for my-app data storage"
+Description: "S3 bucket for application data storage"
 
 Parameters:
-  BucketName:
-    Type: String
-    Default: my-app-data-20260714
-    Description: Globally unique S3 bucket name
   Environment:
     Type: String
     Default: production
@@ -20,7 +16,6 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Ref BucketName
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
@@ -34,16 +29,13 @@ Resources:
         RestrictPublicBuckets: true
       LifecycleConfiguration:
         Rules:
-          - Id: ExpireOldVersions
-            Status: Enabled
-            NoncurrentVersionExpirationInDays: 90
           - Id: AbortIncompleteUploads
             Status: Enabled
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 7
       Tags:
         - Key: Name
-          Value: !Ref BucketName
+          Value: !Ref AWS::StackName
         - Key: Environment
           Value: !Ref Environment
 

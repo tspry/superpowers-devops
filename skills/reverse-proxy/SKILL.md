@@ -49,10 +49,12 @@ certbot renew --dry-run          # test auto-renewal
 | Error | First check |
 |---|---|
 | 502 Bad Gateway | Is the upstream running? `curl localhost:3000` |
-| 504 Gateway Timeout | Increase `proxy_read_timeout` and `proxy_connect_timeout` |
+| 504 Gateway Timeout | Compare timestamps/traces across DNS, connect, TLS, queue, application, dependency, and response-read phases |
 | 413 Request Too Large | Increase `client_max_body_size` |
 | SSL handshake error | Check cert validity, check `ssl_protocols` |
 | `connect() failed (111: Connection refused)` | Wrong upstream port or service not running |
+
+A larger timeout is not a default fix. Establish the end-to-end latency budget, identify the phase that exhausted it, and correct that cause. Change a proxy timeout only when the intended request duration exceeds the current budget; bound the change, consider concurrency/resource impact, verify latency and error rates, and retain the previous value for rollback.
 
 ### Useful debug commands
 ```bash

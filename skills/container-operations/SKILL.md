@@ -15,15 +15,15 @@ description: Use when working with Docker — building images, writing Dockerfil
 ### Building Images
 ```bash
 docker build -t myapp:1.0.0 .
-docker build --no-cache -t myapp:1.0.0 .   # force fresh build
+docker build --no-cache -t myapp:1.0.0 .   # diagnose cache correctness; not a routine default
 ```
 
 **Best practices:**
 - Pin base image versions — never use `latest` in production
-- Use multi-stage builds to keep production images small
+- Use multi-stage builds when they materially reduce the runtime image or remove build tools
 - Add `.dockerignore` to exclude `node_modules`, `.git`, `.env`
-- Run as non-root user
-- One process per container
+- Run as a non-root user when the workload supports it
+- Keep one service or responsibility per container. Multiple worker processes are valid when PID 1 forwards signals and reaps children correctly.
 
 ### Debugging Containers
 ```bash
@@ -33,6 +33,12 @@ docker exec -it <container> sh       # shell into running container
 docker inspect <container>           # full config and state
 docker stats                         # live resource usage
 ```
+
+### Disk pressure and cleanup
+
+Start with `df`, `docker system df -v`, container writable-layer sizes, log-file usage, and volume ownership. Determine what is consuming the filesystem and which team or workload owns it.
+
+Pruning is destructive. Obtain authorization and confirm rollback/retention requirements before deleting stopped containers, images, build cache, or volumes. Plain `docker system prune` does not remove volumes by default; named-volume deletion is a separate explicit action. Verify recovered space and service health after cleanup.
 
 ## Kubernetes & Helm — use the `kubernetes` skill
 

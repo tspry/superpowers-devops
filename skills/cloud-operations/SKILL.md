@@ -33,10 +33,21 @@ aws ecs describe-tasks --cluster my-cluster --tasks <task-arn>
 
 | Error | Fix |
 |---|---|
-| `AccessDenied` | Add required action to IAM policy |
+| `AccessDenied` | Identify the denied principal, action, resource, and controlling policy layer before changing permissions |
 | `ThrottlingException` | Implement exponential backoff retry |
 | `InvalidClientTokenId` | Check AWS credentials and region config |
 | `NoSuchBucket` | Wrong region or bucket name |
+
+### AWS authorization denials
+
+Do not treat `AccessDenied` as proof that the identity policy needs another action.
+
+1. Preserve the full error and record the caller from `aws sts get-caller-identity`, requested action, resource ARN, account, region, credentials/session, and network path.
+2. Distinguish an explicit deny from an implicit deny. Use any policy type named in the error, but do not assume it is the only applicable deny.
+3. Evaluate the effective policy layers that apply: identity policy, resource policy, permissions boundary, session policy, Organizations SCP/RCP, VPC endpoint policy, and request conditions. For `sts:AssumeRole`, also inspect the target role trust policy.
+4. Check action/resource shape and condition context, including region, tags, organization, source VPC/endpoint, and principal/session ARN.
+5. Propose only the narrowest authorized change to the policy layer proven to cause the denial. An SCP or boundary denial is not fixed by broadening the role's identity policy.
+6. Re-test with the same principal, session path, region, action, and resource. Use CloudTrail, the policy simulator, or authorization details when available; state when those sources are unavailable.
 
 ### IAM least privilege
 Always scope policies to specific resources:

@@ -1,14 +1,10 @@
 ---
 # Minimal Lambda function configuration
-# Substitute account ID, region, and S3 bucket for your deployment artifacts.
+# Supply an artifact, handler, and exact DynamoDB table ARN for the selected runtime.
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Lambda function for my-app service"
+Description: "Lambda function with explicit deployment and data inputs"
 
 Parameters:
-  FunctionName:
-    Type: String
-    Default: my-app-handler
-    Description: Name of the Lambda function
   Runtime:
     Type: String
     Default: nodejs22.x
@@ -19,8 +15,8 @@ Parameters:
     Description: Lambda runtime identifier
   Handler:
     Type: String
-    Default: index.handler
-    Description: Function handler (file.function)
+    MinLength: 1
+    Description: Runtime-compatible function handler
   MemorySize:
     Type: Number
     Default: 256
@@ -33,18 +29,22 @@ Parameters:
     Description: Function timeout in seconds
   S3Bucket:
     Type: String
-    Default: my-app-lambda-artifacts
-    Description: S3 bucket containing the deployment package
+    MinLength: 3
+    Description: Existing S3 bucket containing the deployment package in this region
   S3Key:
     Type: String
-    Default: functions/my-app-handler.zip
+    MinLength: 1
     Description: S3 key of the deployment package
+  TableArn:
+    Type: String
+    MinLength: 1
+    AllowedPattern: "^arn:[^:]+:dynamodb:[^:]+:[0-9]{12}:table/.+$"
+    Description: Exact DynamoDB table ARN used by this function
 
 Resources:
   FunctionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${FunctionName}-role"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -55,7 +55,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: !Sub "${FunctionName}-policy"
+        - PolicyName: !Sub "${AWS::StackName}-lambda-policy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -64,15 +64,14 @@ Resources:
                   - dynamodb:GetItem
                   - dynamodb:PutItem
                   - dynamodb:Query
-                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/my-app-*"
+                Resource: !Ref TableArn
       Tags:
         - Key: Name
-          Value: !Ref FunctionName
+          Value: !Ref AWS::StackName
 
   Function:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Ref FunctionName
       Role: !GetAtt FunctionRole.Arn
       Runtime: !Ref Runtime
       Handler: !Ref Handler
@@ -84,7 +83,6 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: info
-          NODE_ENV: production
       Tags:
         - Key: Name
-          Value: !Ref FunctionName
+          Value: !Ref AWS::StackName

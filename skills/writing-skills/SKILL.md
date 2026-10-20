@@ -66,8 +66,8 @@ skills/
 
 **Frontmatter (YAML):**
 - Two required fields: `name` and `description`
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (e.g., `infrastructure-provisioning`, not `infra_provisioning`)
+- `name`: 1–64 lowercase letters, numbers, or single hyphens; no leading, trailing, or consecutive hyphens; must equal the parent directory name
+- `description`: 1–1024 characters, written on one line for this plugin
 - `description`: Third-person, describes ONLY when to use (NOT what it does)
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts

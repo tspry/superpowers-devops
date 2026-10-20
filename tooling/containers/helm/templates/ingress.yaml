@@ -1,4 +1,11 @@
 {{- if .Values.ingress.enabled -}}
+{{- $className := required "ingress.className is required when ingress.enabled=true" .Values.ingress.className -}}
+{{- if not .Values.ingress.hosts -}}
+{{- fail "ingress.hosts is required when ingress.enabled=true" -}}
+{{- end -}}
+{{- if not .Values.ingress.tls -}}
+{{- fail "ingress.tls is required when ingress.enabled=true" -}}
+{{- end -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,10 +14,12 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "my-app.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingress.className }}
+  ingressClassName: {{ $className }}
   {{- if .Values.ingress.tls }}
   tls:
     {{- range .Values.ingress.tls }}
@@ -18,12 +27,12 @@ spec:
         {{- range .hosts }}
         - {{ . | quote }}
         {{- end }}
-      secretName: {{ .secretName }}
+      secretName: {{ required "ingress.tls[].secretName is required when ingress.enabled=true" .secretName }}
     {{- end }}
   {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ required "ingress.hosts[].host is required when ingress.enabled=true" .host | quote }}
       http:
         paths:
           {{- range .paths }}

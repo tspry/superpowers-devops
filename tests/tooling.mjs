@@ -54,11 +54,29 @@ assert.deepEqual(task.ContainerDefinitions[0].LogConfiguration.Options['awslogs-
 const lambda = parse(read('tooling/cloud/aws/lambda.yaml'));
 assert.ok(lambda.Parameters.Runtime.AllowedValues.includes(lambda.Parameters.Runtime.Default));
 assert.ok(!lambda.Parameters.Runtime.AllowedValues.some(value => ['nodejs18.x', 'nodejs20.x'].includes(value)));
-const s3 = parse(read('tooling/cloud/aws/s3-bucket.yaml')).Resources.DataBucket;
+for (const parameter of ['Handler', 'S3Bucket', 'S3Key', 'TableArn']) {
+  assert.equal(lambda.Parameters[parameter].Default, undefined, `${parameter} must be supplied`);
+}
+assert.equal(lambda.Resources.Function.Properties.FunctionName, undefined);
+assert.equal(lambda.Resources.FunctionRole.Properties.RoleName, undefined);
+assert.equal(lambda.Resources.Function.Properties.Environment.Variables.NODE_ENV, undefined);
+const tableAccess = lambda.Resources.FunctionRole.Properties.Policies[0].PolicyDocument.Statement
+  .find(statement => statement.Action.includes('dynamodb:GetItem'));
+assert.deepEqual(tableAccess.Resource, { Ref: 'TableArn' });
+
+const s3Template = parse(read('tooling/cloud/aws/s3-bucket.yaml'));
+const s3 = s3Template.Resources.DataBucket;
 assert.equal(s3.DeletionPolicy, 'Retain');
 assert.equal(s3.UpdateReplacePolicy, 'Retain');
+assert.equal(s3Template.Parameters.BucketName, undefined);
+assert.equal(s3.Properties.BucketName, undefined);
 assert.ok(Object.values(s3.Properties.PublicAccessBlockConfiguration).every(value => value === true));
-JSON.parse(read('tooling/cloud/aws/iam-policy.json'));
+assert.ok(s3.Properties.LifecycleConfiguration.Rules.every(rule => rule.NoncurrentVersionExpirationInDays === undefined));
+
+const iamText = read('tooling/cloud/aws/iam-policy.json');
+const iam = JSON.parse(iamText);
+assert.ok(iam.Statement.every(statement => statement.Effect !== 'Deny'));
+assert.ok(!iamText.includes('my-app-*'));
 
 const kubernetes = read('skills/kubernetes/SKILL.md');
 const good = yamlBlock(kubernetes, '### 1. Deployment securityContext');
@@ -78,4 +96,4 @@ const backend = ingress.spec.rules[0].http.paths[0].backend.service;
 assert.equal(backend.name, service.metadata.name);
 assert.equal(backend.port.number, service.spec.ports[0].port);
 assert.equal(ingress.metadata.namespace, service.metadata.namespace);
-console.log('PASS: AWS input invariants, CRLF-safe named example extraction, and Kubernetes GOOD-example consistency');
+console.log('PASS: safe AWS defaults/input invariants, CRLF-safe named extraction, and Kubernetes GOOD-example consistency');

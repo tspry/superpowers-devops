@@ -32,11 +32,11 @@ dig -x 1.2.3.4
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| NXDOMAIN | Record doesn't exist | Create the record |
-| Old IP after update | TTL not expired yet | Wait, or lower TTL before changes |
-| Works on some networks, not others | Propagation still in progress | Wait up to 48h |
-| CNAME conflict | CNAME at root/apex (not allowed) | Use ALIAS/ANAME record instead |
-| SSL cert error after DNS change | Old IP cached | Flush local DNS cache |
+| NXDOMAIN | Record, delegation, or negative cache does not resolve | Compare authoritative SOA/record data with resolver answers and negative TTL |
+| Old answer after update | A resolver may still hold an answer for the TTL published before the change | Compare TTLs and authoritative/current resolver answers; wait only for the measured cache lifetime |
+| Networks disagree | Resolver caches, split-horizon DNS, delegation, DNSSEC, or stale authoritative servers differ | Query the affected resolver and each authoritative server; do not substitute a generic propagation wait |
+| CNAME conflict | CNAME is incompatible with another record at the same owner name | Use a provider-supported apex alias only when its semantics fit |
+| Certificate error after DNS change | Traffic may reach different endpoints or serve a mismatched certificate | Resolve from affected networks and inspect the certificate served by each resulting endpoint |
 
 ## Propagation Checking
 
@@ -46,14 +46,17 @@ dig @8.8.8.8 example.com      # Google
 dig @1.1.1.1 example.com      # Cloudflare
 dig @9.9.9.9 example.com      # Quad9
 
-# Local DNS cache flush
+# Local DNS cache flush (only after capturing the stale answer)
 # macOS
 sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
-# Linux
-sudo systemd-resolve --flush-caches
+# Linux with systemd-resolved
+sudo resolvectl flush-caches
+# Older systemd releases may use: sudo systemd-resolve --flush-caches
 # Windows
 ipconfig /flushdns
 ```
+
+For stale answers, record the queried name/type, old and new values, previous TTL, authoritative nameservers, SOA negative-caching values, delegation, and the exact affected resolver. Query authoritative servers directly, then compare recursive resolvers. Flushing one client cache cannot change upstream resolver caches.
 
 ## DNS Record Types Quick Reference
 

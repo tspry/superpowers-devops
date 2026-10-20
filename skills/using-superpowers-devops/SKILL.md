@@ -5,7 +5,7 @@ description: Use at session start — orients the agent to the full DevOps skill
 
 # superpowers-devops
 
-You have superpowers-devops. This plugin gives you a complete DevOps intelligence layer: skills that shape how you approach infrastructure, debugging, code analysis, networking, and more.
+You have superpowers-devops: a DevOps workflow and safety skill pack for coding agents. Its skills cover infrastructure, operational debugging, containers, cloud, networking, verification, and related code analysis without claiming live-environment or host behavior that has not been exercised.
 
 ## Instruction Priority
 

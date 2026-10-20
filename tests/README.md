@@ -13,7 +13,7 @@ git diff --cached --check
 ```
 
 - `validate.sh`: frontmatter presence, entrypoint references, and executable modes in Git's index. On Windows, `core.filemode=false` can hide a Unix permission regression; both hook executables must be tracked as `100755`.
-- `reliability.py`: manifest version parity, skill discovery/frontmatter contracts, tooling paths/inventory, local Markdown links, actual pre-commit first-file handling, and Claude/Cursor hook command/output contracts. Checks spaced paths, empty PATH dispatch and LF attributes; on Windows it also exercises native `cmd.exe` exit propagation. Requires Bash on PATH (Git Bash on Windows).
+- `reliability.py`: manifest version parity, Agent Skills metadata boundaries, command/trigger contracts, tooling paths/inventory, local Markdown links, actual pre-commit first-file handling, and Claude/Cursor hook command/output contracts. Checks spaced paths, empty PATH dispatch and LF attributes; on Windows it also exercises native `cmd.exe` exit propagation. Requires Bash on PATH (Git Bash on Windows).
 - `opencode.mjs`: real adapter exports with synthetic 1.x/2.x host inputs; skill registration, config preservation, parent/child exclusion, deduplication, context reinjection, and compaction. These tests adapt upstream's contract-testing approach; they do not launch an OpenCode host.
 
 ## Required when changing templates or related examples
@@ -36,4 +36,4 @@ Before claiming support for a host/version/OS, install the plugin in a disposabl
 
 No check applies infrastructure. Deployment evidence requires the intended account/region/cluster/namespace, approved plan/diff, credentials, admission/CRD/controller checks, readiness/routing checks, and rollback evidence. Schema validation, client/server dry-run, and rendering each establish narrower claims. Do not apply to production to satisfy repository checks.
 
-Content checks do not establish that agents follow instructions under pressure; report behavioral evaluation separately. Update the evidence and remaining limits in [the upstream record](../docs/upstream-sync.md) whenever either upstream is adapted.
+Content checks do not establish agent behavior under pressure; keep that limitation explicit. Update evidence and remaining limits in [the upstream record](../docs/upstream-sync.md) whenever either upstream is adapted.

@@ -9,8 +9,8 @@
         "s3:ListBucket"
       ],
       "Resource": [
-        "arn:aws:s3:::my-app-data-*",
-        "arn:aws:s3:::my-app-data-*/*"
+        "arn:aws:s3:::replace-with-bucket-name",
+        "arn:aws:s3:::replace-with-bucket-name/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -29,7 +29,7 @@
         "dynamodb:Query",
         "dynamodb:DescribeTable"
       ],
-      "Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/my-app-*"
+      "Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/replace-with-table-name"
     },
     {
       "Sid": "KMSDecryptForDataAccess",
@@ -47,17 +47,6 @@
           ]
         }
       }
-    },
-    {
-      "Sid": "DenyDangerousActions",
-      "Effect": "Deny",
-      "Action": [
-        "iam:*",
-        "kms:ScheduleKeyDeletion",
-        "s3:DeleteBucket",
-        "dynamodb:DeleteTable"
-      ],
-      "Resource": "*"
     }
   ]
 }

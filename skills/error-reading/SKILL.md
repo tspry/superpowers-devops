@@ -55,7 +55,7 @@ Error reading identifies the problem. Systematic debugging finds the root cause 
 ### Docker
 | Error | Meaning |
 |---|---|
-| `no space left on device` | Disk full — run `docker system prune` |
+| `no space left on device` | Capacity exhausted somewhere in the storage path — inspect filesystem, Docker object usage, container writable layers, and logs before authorized cleanup |
 | `port is already allocated` | Port conflict — find and stop the other process |
 | `exec format error` | Wrong architecture (e.g., ARM image on AMD64) |
 
@@ -64,23 +64,25 @@ Error reading identifies the problem. Systematic debugging finds the root cause 
 |---|---|
 | `502 Bad Gateway` | Upstream is down or not responding |
 | `503 Service Unavailable` | No healthy upstream servers |
-| `504 Gateway Timeout` | Upstream took too long — check `proxy_read_timeout` |
+| `504 Gateway Timeout` | A configured request deadline expired — identify whether time was spent in DNS, connect, TLS, queueing, application code, a dependency, or response reads |
 | `upstream connect error` | Wrong upstream address, port, or firewall blocking |
 
 ### Terraform
 | Error | Meaning |
 |---|---|
 | `Error acquiring the state lock` | Another process holds the lock — check for stuck runs |
-| `ResourceAlreadyExists` | Resource exists outside Terraform state — import it |
-| `UnauthorizedOperation` | IAM permissions missing |
+| `ResourceAlreadyExists` | The remote object already exists — establish its owner and state before deciding whether import is correct |
+| `UnauthorizedOperation` | Authorization failed — identify the principal, action, resource, conditions, and controlling policy layer |
 | `InvalidInstanceType` | Instance type not available in that region |
 
 ### AWS
 | Error | Meaning |
 |---|---|
-| `AccessDenied` | IAM policy missing required action |
+| `AccessDenied` | Authorization failed — distinguish explicit/implicit denial and evaluate every applicable policy layer before changing permissions |
 | `ThrottlingException` | API rate limit — add retry logic with backoff |
 | `InvalidClientTokenId` | Wrong AWS credentials or region |
+
+Quick-reference entries classify evidence; they do not authorize a fix. Do not jump from disk pressure to pruning, an existing object to import, a timeout to a larger timeout, or an authorization error to broader permissions.
 
 ### GitHub Actions
 | Error | Meaning |

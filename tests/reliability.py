@@ -11,6 +11,34 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 
+SKILL_NAME = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
+
+
+def frontmatter_fields(text):
+    if not text.startswith('---\n'):
+        return {}
+    block = text.split('---', 2)[1]
+    return {
+        key: value.strip()
+        for line in block.splitlines()
+        if ':' in line
+        for key, value in [line.split(':', 1)]
+    }
+
+
+def skill_metadata_errors(directory_name, text):
+    fields = frontmatter_fields(text)
+    name = fields.get('name', '')
+    description = fields.get('description', '')
+    errors = []
+    if not 1 <= len(name) <= 64 or not SKILL_NAME.fullmatch(name):
+        errors.append('invalid skill name')
+    if name != directory_name:
+        errors.append('skill name must match its directory')
+    if not 1 <= len(description) <= 1024:
+        errors.append('invalid description length')
+    return errors
+
 
 class Reliability(unittest.TestCase):
     def test_bash_launcher_with_empty_path_and_spaced_arguments(self):
@@ -59,19 +87,48 @@ class Reliability(unittest.TestCase):
         marketplace = json.loads((ROOT / '.claude-plugin/marketplace.json').read_text(encoding='utf-8'))
         self.assertEqual(marketplace['plugins'][0]['version'], version)
 
-    def test_skills_and_tooling_references(self):
+    def test_skill_metadata_rejects_invalid_contracts(self):
+        valid = '---\nname: valid-skill\ndescription: Use when validating a skill\n---\n'
+        self.assertEqual(skill_metadata_errors('valid-skill', valid), [])
+        invalid = [
+            ('Bad', '---\nname: Bad\ndescription: Use when uppercase is present\n---\n'),
+            ('bad--name', '---\nname: bad--name\ndescription: Use when repeated hyphens are present\n---\n'),
+            ('-bad', '---\nname: -bad\ndescription: Use when a leading hyphen is present\n---\n'),
+            ('bad-', '---\nname: bad-\ndescription: Use when a trailing hyphen is present\n---\n'),
+            ('different', '---\nname: valid\ndescription: Use when names differ\n---\n'),
+            ('a' * 65, f"---\nname: {'a' * 65}\ndescription: Use when names are too long\n---\n"),
+            ('valid', f"---\nname: valid\ndescription: {'x' * 1025}\n---\n"),
+            ('valid', '---\nname: valid\ndescription: \n---\n'),
+        ]
+        for directory, text in invalid:
+            self.assertTrue(skill_metadata_errors(directory, text), directory)
+
+    def test_skills_commands_triggers_and_tooling_references(self):
         skills = list((ROOT / 'skills').glob('*/SKILL.md'))
+        names = []
         trigger = (ROOT / 'skills/using-superpowers-devops/SKILL.md').read_text(encoding='utf-8')
         for skill in skills:
             text = skill.read_text(encoding='utf-8')
-            self.assertTrue(text.startswith('---\n'), str(skill))
-            frontmatter = text.split('---', 2)[1]
-            self.assertRegex(frontmatter, rf'(?m)^name: {re.escape(skill.parent.name)}\s*$')
-            self.assertRegex(frontmatter, r'(?m)^description: \S.+')
-            if skill.parent.name != 'using-superpowers-devops':
-                self.assertIn(f'`{skill.parent.name}`', trigger)
+            fields = frontmatter_fields(text)
+            self.assertEqual(skill_metadata_errors(skill.parent.name, text), [], str(skill))
+            names.append(fields['name'])
             for reference in re.findall(r'`(tooling/[^`\n]*)`', text):
                 self.assertTrue((ROOT / reference).exists(), f'{skill.relative_to(ROOT)}: missing {reference}')
+        self.assertEqual(len(names), len(set(names)), 'skill names must be unique')
+
+        expected_triggers = set(names) - {'using-superpowers-devops'}
+        trigger_table = trigger.split('## When to Invoke Each Skill', 1)[1].split('## Dual-Mode Awareness', 1)[0]
+        trigger_targets = set(re.findall(r'`([a-z0-9-]+)`', trigger_table))
+        self.assertEqual(trigger_targets, expected_triggers)
+
+        command_targets = []
+        for command in (ROOT / 'commands').glob('*.md'):
+            targets = re.findall(r'load `([a-z0-9-]+)`', command.read_text(encoding='utf-8'))
+            self.assertEqual(len(targets), 1, f'{command.relative_to(ROOT)} must load exactly one skill')
+            self.assertIn(targets[0], names, f'{command.relative_to(ROOT)} references missing skill')
+            command_targets.extend(targets)
+        self.assertEqual(len(command_targets), len(set(command_targets)), 'duplicate command target')
+
 
     def test_tooling_inventory(self):
         inventory = (ROOT / 'tooling/README.md').read_text(encoding='utf-8')

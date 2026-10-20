@@ -4,7 +4,7 @@
 
 > **For kubernetes-skill, adapted from [KubeShark](https://github.com/LukasNiessen/kubernetes-skill)** by Lukas Niessen - a failure-mode-first, security-hardened Kubernetes agent skill.
 
-A DevOps-focused skill plugin for AI coding agents, with infrastructure/debugging guidance and a small set of adaptable Helm and AWS examples. Templates require project-specific inputs and validation; they are not a production-readiness guarantee.
+A DevOps workflow and safety skill pack for coding agents, with infrastructure/debugging guidance and a small set of adaptable Helm and AWS examples. Content is evidence-driven and operationally scoped; templates require project-specific inputs and validation and are not a production-readiness guarantee.
 
 ## What It Does
 

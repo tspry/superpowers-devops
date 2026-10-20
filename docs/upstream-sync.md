@@ -7,13 +7,29 @@
 | [obra/superpowers](https://github.com/obra/superpowers) | `bb92a77741419a4ab5f06e711a283343f1ada0c3` — v7.0.0, 2026-10-09 | Selected workflow content, OpenCode contracts, Cursor hooks, and cross-platform launcher; not a full merge |
 | [LukasNiessen/kubernetes-skill](https://github.com/LukasNiessen/kubernetes-skill) | `34f93c1e409156958cc7c410ab1aa88ab512f10f` — 2026-09-13 | Kubernetes core and all six conditional platform references reviewed; selected guidance adapted |
 
-These are **reviewed**, not necessarily byte-for-byte imported, baselines. They are included in the local **1.3.0** version update; publication requires a separate authorized push/release. Do not advance a baseline past unreviewed changes.
+These are **reviewed**, not necessarily byte-for-byte imported, baselines. They are included in the local **1.3.0** version update; publication requires a separate authorized push. The existing manifest version-sync process remains authoritative and does not require GitHub Release automation. Do not advance a baseline past unreviewed changes.
 
 ## 2026-10-20 — Windows CRLF example extraction
 
 `tests/tooling.mjs` previously matched only an LF immediately after a Markdown `yaml` fence. A normal Windows CRLF checkout therefore failed before reaching the Kubernetes invariants. The extractor now normalizes line endings, selects examples by their named Markdown section, and reports missing sections or YAML blocks explicitly. An isolated CRLF fixture guards the regression without changing the reviewed upstream baselines.
 
 Verification passed with `bun tests/tooling.mjs`, `bash tests/validate.sh`, `python tests/reliability.py`, `bun tests/opencode.mjs`, `python tests/helm.py`, `python tests/monitoring.py`, and the Git whitespace checks. The locally cached Helm and Prometheus archives matched their published SHA-256 records before the native checks ran. These remain offline parser, rendering, and semantic-invariant checks; they do not establish CloudFormation validity, Kubernetes admission, live infrastructure behavior, or native host compatibility.
+
+## 2026-10-20 — DevOps correctness and safe defaults
+
+### Local vendor-driven corrections
+
+- AWS authorization guidance now diagnoses the effective policy layers, denial type, caller, action, resource, account, region, conditions, and network path before proposing the narrowest authorized change.
+- Terraform guidance now covers S3 lockfile compatibility and permissions, mixed-version DynamoDB migration, saved-plan sensitivity, force-unlock ownership, Ansible check-mode limits, and remote-resource ownership before import.
+- Docker, proxy, load-balancer, DNS, memory-retention, container-process, and audit guidance now requires evidence and role-specific applicability instead of destructive cleanup, blanket timeout increases, generic propagation waits, or universal workload rules.
+- Helm defaults disable ingress, require explicit class/host/TLS inputs when enabled, and omit a generic CPU limit. AWS examples use generated physical names, no default object-version deletion, explicit Lambda artifact/handler/table inputs, exact workload-policy placeholders, and no unexplained generic deny.
+- Repository contracts now enforce Agent Skills name/description boundaries, directory equality, unique names, trigger coverage, one valid skill target per command, and deliberate command aliases. Positioning describes a DevOps workflow and safety skill pack rather than a complete intelligence layer.
+
+### Evidence and limits
+
+`bash tests/validate.sh`, `python tests/reliability.py` (9 tests), `bun tests/opencode.mjs`, `bun tests/tooling.mjs`, `python tests/helm.py`, `python tests/monitoring.py`, and both Git whitespace checks passed. The Helm test exercises disabled/default ingress, rejection of incomplete ingress, explicit TLS ingress, resource defaults, and ServiceAccount modes. The tooling test exercises the new AWS default/input invariants.
+
+Available CLI version checks found Claude Code 2.1.288, OpenCode 2.0.32, and Codex CLI 0.153.4. Cursor, Kimi, and Pi were unavailable; the installed Gemini command was broken because its bundled module was missing. No host installation or user configuration was changed, so native skill discovery, entrypoint injection, parent/child behavior, and updates remain unverified. No skill consolidation was performed: behavioral evidence was intentionally omitted from this pass, so merging distinct trigger paths would be unsupported.
 
 ## 2026-10-19 — Reliability and Kubernetes follow-up
 

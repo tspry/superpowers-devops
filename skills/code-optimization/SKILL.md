@@ -12,13 +12,15 @@ description: Use when analyzing code for performance issues, memory leaks, ineff
 
 ## What to Look For
 
-### Memory Leaks
+### Memory retention and leaks
 
 - Connections opened but never closed (DB, HTTP, file handles)
-- Event listeners added but never removed
-- Unbounded in-memory caches or queues (grows forever)
-- Objects held in global scope that should be request-scoped
-- Circular references preventing garbage collection
+- Event listeners, callbacks, timers, goroutines, or tasks that remain registered after their owner is gone
+- Unbounded in-memory caches or queues
+- Objects retained by globals, closures, registries, native handles, or runtime roots longer than intended
+- Runtime-specific finalizer or reference behavior
+
+An object cycle is not itself a leak in modern tracing garbage collectors when the cycle becomes unreachable. Require evidence of sustained growth and retained-object paths from heap/allocation profiles before declaring a leak.
 
 ### Inefficient Loops & Algorithms
 
@@ -37,11 +39,11 @@ description: Use when analyzing code for performance issues, memory leaks, ineff
 
 ### Container & Infrastructure Waste
 
-- Oversized Docker images (unnecessary packages, dev deps in prod image)
-- Redundant image layers (multiple `RUN` commands that could be combined)
-- CPU/memory limits set far above actual usage
-- Idle replicas with no autoscaling configured
-- Logs written to disk inside container instead of stdout
+- Oversized runtime images containing unused packages or build dependencies
+- Redundant layers or cache-invalidating instruction order that measurably increases build or transfer cost
+- CPU/memory requests or limits materially disconnected from measured workload behavior
+- Idle capacity whose availability objective does not justify its cost
+- Unbounded container-local logs consuming ephemeral storage
 
 ### Common Language Patterns
 
