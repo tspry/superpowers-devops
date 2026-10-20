@@ -9,6 +9,12 @@
 
 These are **reviewed**, not necessarily byte-for-byte imported, baselines. They are included in the local **1.3.0** version update; publication requires a separate authorized push/release. Do not advance a baseline past unreviewed changes.
 
+## 2026-10-20 — Windows CRLF example extraction
+
+`tests/tooling.mjs` previously matched only an LF immediately after a Markdown `yaml` fence. A normal Windows CRLF checkout therefore failed before reaching the Kubernetes invariants. The extractor now normalizes line endings, selects examples by their named Markdown section, and reports missing sections or YAML blocks explicitly. An isolated CRLF fixture guards the regression without changing the reviewed upstream baselines.
+
+Verification passed with `bun tests/tooling.mjs`, `bash tests/validate.sh`, `python tests/reliability.py`, `bun tests/opencode.mjs`, `python tests/helm.py`, `python tests/monitoring.py`, and the Git whitespace checks. The locally cached Helm and Prometheus archives matched their published SHA-256 records before the native checks ran. These remain offline parser, rendering, and semantic-invariant checks; they do not establish CloudFormation validity, Kubernetes admission, live infrastructure behavior, or native host compatibility.
+
 ## 2026-10-19 — Reliability and Kubernetes follow-up
 
 ### Platform and validation adaptations

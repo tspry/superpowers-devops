@@ -24,7 +24,7 @@ python tests/helm.py
 python tests/monitoring.py
 ```
 
-- `tooling.mjs` uses Bun's built-in YAML parser to check AWS input wiring and cross-resource invariants in the Kubernetes GOOD examples. It preserves this repository's simple `!Ref` forms; other tags are not evaluated. It is not a CloudFormation/schema/admission validator. Pinning supported Lambda runtimes still requires checking AWS's lifecycle table during maintenance.
+- `tooling.mjs` uses Bun's built-in YAML parser to check AWS input wiring and cross-resource invariants in named Kubernetes GOOD examples. Its Markdown extractor normalizes LF/CRLF input and fails clearly when a named section or YAML block is absent. It preserves this repository's simple `!Ref` forms; other tags are not evaluated. It is not a CloudFormation/schema/admission validator. Pinning supported Lambda runtimes still requires checking AWS's lifecycle table during maintenance.
 - `helm.py` requires `helm` on PATH; runs real strict lint and rendering for generated/custom/existing ServiceAccounts and rejection of an unspecified existing account. It proves chart rendering, not image compatibility, readiness, admission, or a running cluster.
 - `monitoring.py` requires `promtool` on PATH; evaluates the skill's real alert against healthy/high-error/no-5xx/idle counter fixtures, then confirms the old label-matching bug fails those fixtures. It proves that alert behavior for the declared metric schema, not scrape availability or notification delivery.
 

@@ -7,6 +7,33 @@ const read = name => readFileSync(new URL(name, root), 'utf8');
 // Preserve !Ref semantics in this repository's simple CFN fixtures. Other YAML
 // tags are parsed as values by Bun; no claim is made about their evaluation.
 const parse = text => Bun.YAML.parse(text.replace(/!Ref ([\w:]+)/g, '{Ref: $1}'));
+const yamlBlock = (markdown, heading) => {
+  const text = markdown.replace(/\r\n?/g, '\n');
+  const start = text.indexOf(heading);
+  assert.notEqual(start, -1, `missing Markdown section: ${heading}`);
+  const bodyStart = start + heading.length;
+  const nextHeading = text.indexOf('\n### ', bodyStart);
+  const section = text.slice(bodyStart, nextHeading === -1 ? undefined : nextHeading);
+  const match = section.match(/```yaml[ \t]*\n([\s\S]*?)```/);
+  assert.ok(match, `missing YAML block in Markdown section: ${heading}`);
+  return match[1];
+};
+const crlfFixture = [
+  '### Named example',
+  '',
+  '```yaml',
+  'kind: ConfigMap',
+  '```',
+  '',
+  '### Next example',
+  '',
+  '```yaml',
+  'kind: Secret',
+  '```'
+].join('\r\n');
+assert.equal(yamlBlock(crlfFixture, '### Named example').trim(), 'kind: ConfigMap');
+assert.throws(() => yamlBlock(crlfFixture, '### Missing example'), /missing Markdown section/);
+assert.throws(() => yamlBlock('### Named example\r\n\r\nNo fixture', '### Named example'), /missing YAML block/);
 const ecs = parse(read('tooling/cloud/aws/ecs-service.yaml'));
 const network = ecs.Resources.Service.Properties.NetworkConfiguration.AwsvpcConfiguration;
 for (const [property, parameter, type] of [
@@ -34,8 +61,7 @@ assert.ok(Object.values(s3.Properties.PublicAccessBlockConfiguration).every(valu
 JSON.parse(read('tooling/cloud/aws/iam-policy.json'));
 
 const kubernetes = read('skills/kubernetes/SKILL.md');
-const block = section => section.match(/```yaml\n([\s\S]*?)```/)[1];
-const good = block(kubernetes.split('### 1. Deployment securityContext')[1]);
+const good = yamlBlock(kubernetes, '### 1. Deployment securityContext');
 const resources = good.split(/^---\s*$/m).map(parse);
 const deployment = resources.find(item => item.kind === 'Deployment');
 const account = resources.find(item => item.kind === 'ServiceAccount');
@@ -47,9 +73,9 @@ assert.equal(pod.spec.securityContext.runAsNonRoot, true);
 assert.equal(pod.spec.automountServiceAccountToken, false);
 for (const [key, value] of Object.entries(service.spec.selector)) assert.equal(pod.metadata.labels[key], value);
 assert.equal(service.spec.ports[0].targetPort, pod.spec.containers[0].readinessProbe.httpGet.port);
-const ingress = parse(block(kubernetes.split('### 5. Image tags and apiVersion correctness')[1]));
+const ingress = parse(yamlBlock(kubernetes, '### 5. Image tags and apiVersion correctness'));
 const backend = ingress.spec.rules[0].http.paths[0].backend.service;
 assert.equal(backend.name, service.metadata.name);
 assert.equal(backend.port.number, service.spec.ports[0].port);
 assert.equal(ingress.metadata.namespace, service.metadata.namespace);
-console.log('PASS: AWS input invariants and Kubernetes GOOD-example resource/port/security consistency');
+console.log('PASS: AWS input invariants, CRLF-safe named example extraction, and Kubernetes GOOD-example consistency');
