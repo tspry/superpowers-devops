@@ -73,6 +73,6 @@ For stale answers, record the queried name/type, old and new values, previous TT
 
 ## TTL Strategy
 
-- **Before making changes:** lower TTL to 300s (5 min) — wait for old TTL to expire first
-- **After changes are confirmed:** raise TTL back to 3600s (1h) or higher
-- **During incidents:** low TTL allows fast rollback
+- **Before making changes:** choose a TTL from the change risk, rollback target, query load, and provider limits. Lower it far enough in advance for the previously published TTL to expire.
+- **After changes are confirmed:** restore the approved operational TTL after authoritative data and affected recursive resolvers return the intended answer.
+- **During incidents:** do not treat a TTL edit as an immediate cache purge. Existing positive and negative cache entries can remain until their current TTL expires; a lower TTL affects subsequent answers and increases authoritative query load.

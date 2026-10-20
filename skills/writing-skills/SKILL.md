@@ -68,10 +68,10 @@ skills/
 - Two required fields: `name` and `description`
 - `name`: 1–64 lowercase letters, numbers, or single hyphens; no leading, trailing, or consecutive hyphens; must equal the parent directory name
 - `description`: 1–1024 characters, written on one line for this plugin
-- `description`: Third-person, describes ONLY when to use (NOT what it does)
-  - Start with "Use when..." to focus on triggering conditions
-  - Include specific symptoms, situations, and contexts
-  - **NEVER summarize the skill's process or workflow**
+- `description`: describes both what the skill covers and when to use it; this plugin starts descriptions with "Use when..."
+  - Include specific symptoms, situations, and DevOps contexts
+  - State the capability without listing the procedure
+  - **NEVER summarize the skill's step-by-step process or workflow**
   - Keep under 500 characters if possible
 
 **Body sections (adapt to need):**
@@ -87,24 +87,24 @@ skills/
 
 ### 1. Rich Description Field
 
-**Purpose:** Your agent reads the description to decide whether to load this skill. Make it answer: "Should I read this skill right now?"
+**Purpose:** Your agent reads the description to decide whether to load this skill. State the capability and answer: "Should I read this skill right now?"
 
-**Format:** Start with "Use when..." to focus on triggering conditions.
+**Format:** Start with "Use when..." to preserve this plugin's trigger convention, then identify the skill's capability.
 
-**CRITICAL: Description = When to Use, NOT What the Skill Does**
+**CRITICAL: Description = What the Skill Covers + When to Use It, NOT Its Workflow**
 
 ```yaml
 # ❌ BAD: Summarizes workflow
-description: Use when debugging Kubernetes — follows a systematic process of checking pods, events, logs, and network policies
+description: Use when debugging Kubernetes — first checks pods, then events, logs, and network policies
 
 # ❌ BAD: Too much process detail
 description: Use for IaC testing — write terraform test first, watch it fail, write minimal code, refactor
 
-# ✅ GOOD: Just triggering conditions, no workflow summary
-description: Use when Kubernetes workloads are crashing, pending, or misbehaving
+# ✅ GOOD: Capability plus triggering conditions
+description: Use when Kubernetes workloads are crashing, pending, or misbehaving — diagnoses workload, scheduling, networking, and policy failures
 
-# ✅ GOOD: Triggering conditions only
-description: Use when implementing any infrastructure change or IaC module — before writing any configuration
+# ✅ GOOD: Capability plus triggering conditions
+description: Use when implementing infrastructure changes or IaC modules — guides evidence-first planning, review, and safe application
 ```
 
 **Content rules:**
@@ -307,7 +307,7 @@ step1, helper2, pattern3
 
 - [ ] Name uses only letters, numbers, hyphens
 - [ ] YAML frontmatter with `name` and `description`
-- [ ] Description starts with "Use when..." (triggering conditions, not workflow)
+- [ ] Description starts with "Use when..." and states both capability and triggering conditions, not the workflow
 - [ ] Description written in third person
 - [ ] DevOps-specific keywords for search discovery
 - [ ] Clear overview with core principle

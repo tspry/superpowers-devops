@@ -54,6 +54,10 @@ assert.deepEqual(task.ContainerDefinitions[0].LogConfiguration.Options['awslogs-
 const lambda = parse(read('tooling/cloud/aws/lambda.yaml'));
 assert.ok(lambda.Parameters.Runtime.AllowedValues.includes(lambda.Parameters.Runtime.Default));
 assert.ok(!lambda.Parameters.Runtime.AllowedValues.some(value => ['nodejs18.x', 'nodejs20.x'].includes(value)));
+const memory = lambda.Parameters.MemorySize;
+assert.equal(memory.MinValue, 128);
+assert.equal(memory.MaxValue, 32768);
+assert.ok(memory.Default >= memory.MinValue && memory.Default <= memory.MaxValue);
 for (const parameter of ['Handler', 'S3Bucket', 'S3Key', 'TableArn']) {
   assert.equal(lambda.Parameters[parameter].Default, undefined, `${parameter} must be supplied`);
 }

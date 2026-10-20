@@ -25,6 +25,20 @@ Verification passed with `bun tests/tooling.mjs`, `bash tests/validate.sh`, `pyt
 - Helm defaults disable ingress, require explicit class/host/TLS inputs when enabled, and omit a generic CPU limit. AWS examples use generated physical names, no default object-version deletion, explicit Lambda artifact/handler/table inputs, exact workload-policy placeholders, and no unexplained generic deny.
 - Repository contracts now enforce Agent Skills name/description boundaries, directory equality, unique names, trigger coverage, one valid skill target per command, and deliberate command aliases. Positioning describes a DevOps workflow and safety skill pack rather than a complete intelligence layer.
 
+### Official documentation cross-check
+
+The correction set was checked against primary contracts rather than inferred from examples:
+
+- [Agent Skills specification](https://agentskills.io/specification) for metadata limits, directory matching, and descriptions that state both capability and trigger conditions.
+- AWS references for [IAM access-denied evaluation](https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_access-denied.html), [CloudFormation IAM capabilities](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/control-access-with-iam.html#using-iam-capabilities), [Lambda functions](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-lambda-function.html), and [S3 buckets](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-s3-bucket.html).
+- HashiCorp references for the [S3 backend](https://developer.hashicorp.com/terraform/language/backend/s3), [state locking](https://developer.hashicorp.com/terraform/language/state/locking), and [saved plans](https://developer.hashicorp.com/terraform/cli/commands/plan), plus the [Ansible check-mode contract](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_checkmode.html).
+- Docker references for [system pruning](https://docs.docker.com/reference/cli/docker/system/prune/) and [multi-service containers](https://docs.docker.com/engine/containers/multi-service_container/).
+- Kubernetes references for [images](https://kubernetes.io/docs/concepts/containers/images/), [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/), [probes](https://kubernetes.io/docs/concepts/workloads/pods/probes/), [Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/), and [resource management](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
+- Helm's [template function contract](https://helm.sh/docs/chart_template_guide/function_list/), systemd's [`resolvectl`](https://www.freedesktop.org/software/systemd/man/latest/resolvectl.html), NGINX's [`ngx_http_proxy_module`](https://nginx.org/en/docs/http/ngx_http_proxy_module.html), Python's [`gc`](https://docs.python.org/3/library/gc.html), and MDN's [JavaScript memory management](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Memory_management).
+- IETF [DNS protocol TTL semantics](https://www.rfc-editor.org/rfc/rfc1035) and [negative caching](https://www.rfc-editor.org/rfc/rfc2308) for positive and negative cache behavior.
+
+This pass corrected three mismatches found during that review: skill-description guidance now includes capability and trigger conditions; the Lambda example documents `CAPABILITY_IAM` and uses the current documented memory range; DNS TTL guidance no longer presents fixed values as universal defaults. Live provider validation remains outside this repository's offline checks.
+
 ### Evidence and limits
 
 `bash tests/validate.sh`, `python tests/reliability.py` (9 tests), `bun tests/opencode.mjs`, `bun tests/tooling.mjs`, `python tests/helm.py`, `python tests/monitoring.py`, and both Git whitespace checks passed. The Helm test exercises disabled/default ingress, rejection of incomplete ingress, explicit TLS ingress, resource defaults, and ServiceAccount modes. The tooling test exercises the new AWS default/input invariants.

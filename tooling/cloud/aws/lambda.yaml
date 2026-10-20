@@ -20,7 +20,9 @@ Parameters:
   MemorySize:
     Type: Number
     Default: 256
-    Description: Memory in MB (128–10240)
+    MinValue: 128
+    MaxValue: 32768
+    Description: Memory in MB
   Timeout:
     Type: Number
     Default: 30
