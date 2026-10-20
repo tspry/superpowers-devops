@@ -1,8 +1,11 @@
 ---
-# Minimal Lambda function configuration
+# Adaptable CloudFormation example; do not deploy unchanged.
 # Supply an artifact, handler, and exact DynamoDB table ARN for the selected runtime.
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Lambda function with explicit deployment and data inputs"
+Description: "Adaptable Lambda example requiring project-specific inputs and validation"
+Metadata:
+  ArtifactStatus: Example
+  Usage: CustomizeAndValidateBeforeDeployment
 
 Parameters:
   Runtime:

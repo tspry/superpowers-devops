@@ -34,7 +34,11 @@ const crlfFixture = [
 assert.equal(yamlBlock(crlfFixture, '### Named example').trim(), 'kind: ConfigMap');
 assert.throws(() => yamlBlock(crlfFixture, '### Missing example'), /missing Markdown section/);
 assert.throws(() => yamlBlock('### Named example\r\n\r\nNo fixture', '### Named example'), /missing YAML block/);
+const chart = parse(read('tooling/containers/helm/Chart.yaml'));
+assert.equal(chart.annotations['superpowers-devops.io/artifact-status'], 'example');
+
 const ecs = parse(read('tooling/cloud/aws/ecs-service.yaml'));
+assert.equal(ecs.Metadata.ArtifactStatus, 'Example');
 const network = ecs.Resources.Service.Properties.NetworkConfiguration.AwsvpcConfiguration;
 for (const [property, parameter, type] of [
   ['SecurityGroups', 'SecurityGroupIds', 'List<AWS::EC2::SecurityGroup::Id>'],
@@ -52,6 +56,7 @@ for (const parameter of ['ExecutionRoleArn', 'TaskRoleArn']) {
 assert.deepEqual(ecs.Resources.Service.Properties.Cluster, { Ref: 'ClusterArn' });
 assert.deepEqual(task.ContainerDefinitions[0].LogConfiguration.Options['awslogs-group'], { Ref: 'LogGroupName' });
 const lambda = parse(read('tooling/cloud/aws/lambda.yaml'));
+assert.equal(lambda.Metadata.ArtifactStatus, 'Example');
 assert.ok(lambda.Parameters.Runtime.AllowedValues.includes(lambda.Parameters.Runtime.Default));
 assert.ok(!lambda.Parameters.Runtime.AllowedValues.some(value => ['nodejs18.x', 'nodejs20.x'].includes(value)));
 const memory = lambda.Parameters.MemorySize;
@@ -69,6 +74,7 @@ const tableAccess = lambda.Resources.FunctionRole.Properties.Policies[0].PolicyD
 assert.deepEqual(tableAccess.Resource, { Ref: 'TableArn' });
 
 const s3Template = parse(read('tooling/cloud/aws/s3-bucket.yaml'));
+assert.equal(s3Template.Metadata.ArtifactStatus, 'Example');
 const s3 = s3Template.Resources.DataBucket;
 assert.equal(s3.DeletionPolicy, 'Retain');
 assert.equal(s3.UpdateReplacePolicy, 'Retain');
@@ -81,6 +87,14 @@ const iamText = read('tooling/cloud/aws/iam-policy.json');
 const iam = JSON.parse(iamText);
 assert.ok(iam.Statement.every(statement => statement.Effect !== 'Deny'));
 assert.ok(!iamText.includes('my-app-*'));
+for (const placeholder of [
+  '123456789012',
+  'replace-with-bucket-name',
+  'replace-with-table-name',
+  '00000000-0000-0000-0000-000000000000'
+]) {
+  assert.ok(iamText.includes(placeholder), `IAM example must retain placeholder: ${placeholder}`);
+}
 
 const kubernetes = read('skills/kubernetes/SKILL.md');
 const good = yamlBlock(kubernetes, '### 1. Deployment securityContext');

@@ -1,8 +1,11 @@
 ---
-# CloudFormation-compatible minimal ECS service + task definition
+# Adaptable CloudFormation example; do not deploy unchanged.
 # Supply existing cluster, IAM roles, log group, security groups and private subnets.
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "ECS service and task definition for my-app"
+Description: "Adaptable ECS service example requiring project-specific inputs and validation"
+Metadata:
+  ArtifactStatus: Example
+  Usage: CustomizeAndValidateBeforeDeployment
 
 Parameters:
   ClusterArn:

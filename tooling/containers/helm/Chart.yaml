@@ -1,6 +1,8 @@
 apiVersion: v2
 name: my-app
-description: A Helm chart for deploying my-app on Kubernetes
+description: An adaptable Helm chart example for deploying my-app on Kubernetes
+annotations:
+  superpowers-devops.io/artifact-status: example
 type: application
 version: 0.1.0
 appVersion: "1.0.0"

@@ -1,6 +1,6 @@
 # Shipped Tooling Inventory
 
-These are starting points to customize and validate, not a production-readiness guarantee. Skills also cover tools for which no template is shipped. Check the target account, cluster, versions, prerequisites and rollback before deployment.
+These are reviewed starting points to customize and validate, not production-ready artifacts. Do not deploy them unchanged. Skills also cover tools for which no template is shipped. Check the target account, cluster, versions, prerequisites and rollback before deployment.
 
 ## Helm chart
 

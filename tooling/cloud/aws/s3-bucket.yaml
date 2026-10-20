@@ -1,8 +1,11 @@
 ---
-# S3 bucket with versioning and default encryption (SSE-S3)
+# Adaptable CloudFormation example; do not deploy unchanged.
 # CloudFormation generates the globally unique physical bucket name.
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "S3 bucket for application data storage"
+Description: "Adaptable S3 bucket example requiring project-specific validation"
+Metadata:
+  ArtifactStatus: Example
+  Usage: CustomizeAndValidateBeforeDeployment
 
 Parameters:
   Environment:
