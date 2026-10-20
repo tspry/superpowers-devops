@@ -1,7 +1,7 @@
 {
   "name": "superpowers-devops",
-  "version": "1.3.0",
-  "description": "Unified DevOps intelligence layer: CI/CD, IaC, containers, cloud, monitoring, networking, code analysis, and debugging skills",
+  "version": "1.3.1",
+  "description": "DevOps workflow and safety skill pack for AI coding agents",
   "author": {
     "name": "superpowers-devops contributors"
   },
